@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="map_reduce_ui">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/map_reduce_ui.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

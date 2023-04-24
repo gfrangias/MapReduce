@@ -7,7 +7,7 @@ services:
       context: ./
       dockerfile: Dockerfile_ui
     volumes:
-      - ./UI_storage:/var/www/html/
+      - ./ui_java_project:/var/www/html/
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.2
