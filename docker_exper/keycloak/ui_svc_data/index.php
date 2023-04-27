@@ -19,12 +19,12 @@
 
 		}else{
 
-			$keycloakBaseUrl = 'http://192.168.1.105:443';
+			$keycloakBaseUrl = 'http://172.16.0.3:8080';
 			$realm = 'master';
 			$client_id = 'ui_svc';
 			$client_secret  = 'lWCjyFqDbcv0xnvqus94ZKvEMUKy0XeY';
 
-			$tokenEndpoint = $keycloakBaseUrl . '/realms/' . $realm . '/protocol/openid-connect/token';
+			$tokenEndpoint = $keycloakBaseUrl . '/auth/realms/' . $realm . '/protocol/openid-connect/token';
 
 			$ch = curl_init($tokenEndpoint);
 
