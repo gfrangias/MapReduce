@@ -4,8 +4,7 @@
 	$auth_error = $blank_error = false;
 
 	if(isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == TRUE){
-		echo 'Redir';
-		header("Location: home.php");
+		header("Location: /home.php");
 	}
 
 	if($_SERVER['REQUEST_METHOD'] == "POST"){
