@@ -4,7 +4,7 @@
         $url = 'http://172.16.0.3/auth/realms/master/protocol/openid-connect/token';
         $client_id = 'ui_svc';
         $client_secret = '4MSqVdyVoEpaB5mpkRIDAGw07gYeHOri';
-        $refresh_token = 'refresh-token';
+        $refresh_token = $_SESSION['refreshToken'];
 
         $data = array(
             'client_id' => $client_id,
