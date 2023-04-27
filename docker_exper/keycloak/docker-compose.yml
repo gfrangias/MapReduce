@@ -14,7 +14,7 @@ services:
       - 3306:3306
     networks:
       map_reduce_network:
-        ipv4_address: 172.16.0.1
+        ipv4_address: 172.16.0.2
 
   keycloak:
     image: quay.io/keycloak/keycloak:legacy
@@ -32,9 +32,9 @@ services:
       - mysql
     networks:
       map_reduce_network:
-        ipv4_address: 172.16.0.2
+        ipv4_address: 172.16.0.3
 
-  ui_svc:
+  ui_svc
     container_name: ui_svc
     build:
       context: ./
@@ -43,7 +43,7 @@ services:
       - ./ui_svc_data:/var/www/html
     networks:
       map_reduce_network:
-        ipv4_address: 172.16.0.3
+        ipv4_address: 172.16.0.4
     ports:
       - 80:80
 
