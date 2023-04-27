@@ -10,6 +10,9 @@ services:
       MYSQL_DATABASE: keycloak
       MYSQL_USER: keycloak
       MYSQL_PASSWORD: password
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.1
 
   keycloak:
     image: quay.io/keycloak/keycloak:legacy
@@ -25,9 +28,9 @@ services:
       - 443:8080
     depends_on:
       - mysql
-  networks:
-    map_reduce_network:
-      ipv4_address: 172.16.0.4
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.2
 
   ui_svc:
     container_name: ui_svc
@@ -38,15 +41,9 @@ services:
       - ./ui_svc_data:/var/www/html
     networks:
       map_reduce_network:
-        ipv4_address: 172.16.0.5
+        ipv4_address: 172.16.0.3
     ports:
       - 80:80
-
-
-volumes:
-  postgresql_data:
-    driver: local
-
 
 networks:
   map_reduce_network:
