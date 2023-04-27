@@ -1,30 +1,30 @@
 version: '3.1'
 
 services:
-  postgresql:
-    image: docker.io/bitnami/postgresql:latest
-    build:
-      context: ./
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-      - POSTGRESQL_USERNAME=bn_keycloak
-      - POSTGRESQL_DATABASE=bitnami_keycloak
-    volumes:
-      - postgresql_data:/bitnami/postgresql
-    networks:
-      map_reduce_network:
-        ipv4_address: 172.16.0.3
+  mysql:
+      image: mysql:5.7
+      volumes:
+        - ./mysql_data:/var/lib/mysql
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: keycloak
+        MYSQL_USER: keycloak
+        MYSQL_PASSWORD: password
 
-  keycloak:
-    image: docker.io/bitnami/keycloak:latest
-    build:
-      context: ./
-    ports:
-      - 443:8080
-    environment:
-      - KEYCLOAK_CREATE_ADMIN_USER=true
-    depends_on:
-      - postgresql
+   keycloak:
+      image: quay.io/keycloak/keycloak:legacy
+      environment:
+        DB_VENDOR: MYSQL
+        DB_ADDR: mysql
+        DB_DATABASE: keycloak
+        DB_USER: keycloak
+        DB_PASSWORD: password
+        KEYCLOAK_USER: admin
+        KEYCLOAK_PASSWORD: zooops
+      ports:
+        - 443:8080
+      depends_on:
+        - mysql
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.4
