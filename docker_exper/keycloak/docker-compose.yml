@@ -10,7 +10,7 @@ services:
       - POSTGRESQL_USERNAME=bn_keycloak
       - POSTGRESQL_DATABASE=bitnami_keycloak
     volumes:
-      - ./postgresql_data:/bitnami/postgresql
+      - postgresql_data:/bitnami/postgresql
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.3
@@ -48,6 +48,7 @@ services:
 volumes:
   postgresql_data:
     driver: local
+
 
 networks:
   map_reduce_network:
