@@ -48,6 +48,7 @@
 				$decodedResponse = json_decode($response, true);
 				if (isset($decodedResponse['access_token'])) {
 					$_SESSION['authToken'] = $decodedResponse['access_token'];
+					$_SESSION['refreshToken'] = $decodedResponse['refresh_token'];
 					$_SESSION['loggedIn'] = TRUE;
 					header("Location: home.php");
 				} else {
