@@ -1,4 +1,5 @@
 <?php
+	ob_start();
 	session_start();
 
 	$auth_error = $blank_error = false;
