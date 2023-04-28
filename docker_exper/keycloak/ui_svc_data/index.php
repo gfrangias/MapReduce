@@ -22,7 +22,7 @@
 			$keycloakBaseUrl = 'http://172.16.0.3:8080';
 			$realm = 'master';
 			$client_id = 'ui_svc';
-			$client_secret  = '4MSqVdyVoEpaB5mpkRIDAGw07gYeHOri';
+			$client_secret  = 'kw3rfyIlfTU0hVuUVyGt5DSxx4s3MZbC';
 
 			$tokenEndpoint = $keycloakBaseUrl . '/auth/realms/' . $realm . '/protocol/openid-connect/token';
 
@@ -50,6 +50,7 @@
 					$_SESSION['authToken'] = $decodedResponse['access_token'];
 					$_SESSION['refreshToken'] = $decodedResponse['refresh_token'];
 					$_SESSION['loggedIn'] = TRUE;
+					$_SESSION['username'] = $_POST['username'];
 					header("Location: home.php");
 				} else {
 					$auth_error = TRUE;
@@ -130,6 +131,7 @@
 		white-space: nowrap;
 		-webkit-overflow-scrolling: touch;
 	}
+	
 	</style>
 
 	

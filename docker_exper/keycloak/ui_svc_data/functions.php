@@ -1,9 +1,15 @@
 <?php
 
+
     function verifyToken(){
-        $url = 'http://172.16.0.3/auth/realms/master/protocol/openid-connect/token';
+        if(!isset($_SESSION['authToken']) || !isset($_SESSION['refreshToken'])){
+            session_destroy();
+            session_unset();
+            echo '<script>window.location.replace("error.php?s=1");</script>';
+        }
+        $url = 'http://172.16.0.3:8080/auth/realms/master/protocol/openid-connect/token';
         $client_id = 'ui_svc';
-        $client_secret = '4MSqVdyVoEpaB5mpkRIDAGw07gYeHOri';
+        $client_secret = 'kw3rfyIlfTU0hVuUVyGt5DSxx4s3MZbC';
         $refresh_token = $_SESSION['refreshToken'];
 
         $data = array(
@@ -32,6 +38,7 @@
         if(!$token || !isset($token->access_token) || !isset($token->refresh_token)) {
             session_destroy();
             session_unset();
+            echo '<script>window.location.replace("error.php?s=1");</script>';
         }
         
         $access_token = $token->access_token;
@@ -40,4 +47,32 @@
         
     }
 
+    function isUserAdmin($userId, $token) {
+        // Set Keycloak admin credentials
+        $keycloakUrl = "http://172.16.0.3:8080/auth";
+        $realm = "master";
+    
+        // Get user roles
+        $userUrl = $keycloakUrl . "/admin/realms/" . $realm . "/users/" . $userId . "/role-mappings/realm";
+        $ch = curl_init($userUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . $token
+        ]);
+        $userResult = curl_exec($ch);
+        curl_close($ch);
+        $userRoles = json_decode($userResult, true);
+    
+        // Check if user is admin
+        $isAdmin = false;
+        foreach ($userRoles as $role) {
+            if ($role["name"] == "admin") {
+                $isAdmin = true;
+                break;
+            }
+        }
+    
+        return $isAdmin;
+    }
+    
 ?>
