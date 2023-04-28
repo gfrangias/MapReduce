@@ -33,56 +33,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Create user in Keycloak
     if (empty($errors)) {
-        $keycloak_url = 'http://172.16.0.3:8080/auth/admin/realms/master/users";';
-
-        $authInfo = acquireToken();
-        
-        if(!isset($authInfo['access_token'])){
-            header("Location: /keycloak_user_management.php?msg_fail=Token+acquire+failed!");
-        }
-
-        print_r($authInfo);
-
-
         $curl = curl_init();
-        $user_data = array(
-            'username' => $username,
-            'email' => $email,
-            'firstName' => $firstName,
-            'lastName' => $lastName,
-            'enabled' => false,
-            'credentials' => array(array(
-                'type' => 'password',
-                'value' => $password,
-                'temporary' => false
-            ))
-        );
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => $keycloak_url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => json_encode($user_data),
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'Authorization: Bearer '. $authInfo['access_token']
-            ),
-        ));
+        CURLOPT_URL => 'http://172.16.0.3:8080/auth/admin/realms/master/users',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS =>'{
+            "username":"'.$username.'",
+            "email": "'.$email.'",
+            "firstName": "'.$firstName.'",
+            "lastName": "'.$lastName.'",
+            "enabled": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "'.$password.'",
+                    "temporary": false
+                }
+            ]
+        }',
+        CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/json',
+            'Authorization: Bearer '. acquireToken()['access_token']
+        )));
 
         $response = curl_exec($curl);
+
         curl_close($curl);
-        
 
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
         if ($httpCode === 201) {
             $message = 'User created successfully';
             $messageClass = 'success';
+        } else if($httpCode === 409){
+            $message = 'User already exists';
+            $messageClass = 'info';
         } else {
             $message = 'Failed to create user '.$httpCode;
             $messageClass = 'danger';
         }
+        
     } else {
         $message = implode('<br>', $errors);
         $messageClass = 'danger';
