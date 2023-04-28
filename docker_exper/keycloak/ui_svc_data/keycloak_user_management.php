@@ -140,6 +140,9 @@
         <div class="container custom-container">    
             <div class="user-table">
             <h1 class="mb-4 table-title"><strong>User Management</strong></h1>
+            <div class="table-toolbar mb-4 d-flex justify-content-end">
+            <a href="create_user.php" class="btn btn-success">Create user<i class="bi bi-plus-lg"></i></a>
+            </div>
             <?php include 'get_all_users.php'; ?>
 
                 <?php if (isset($_GET['msg_success'])): ?>

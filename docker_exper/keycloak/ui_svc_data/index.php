@@ -1,9 +1,10 @@
 <?php
+	include "functions.php";
 	ob_start();
 	session_start();
 
 	$auth_error = $blank_error = false;
-
+	
 	if(isset($_SESSION['loggedIn']) && $_SESSION['loggedIn'] == TRUE){
 		header("Location: /home.php");
 	}
@@ -51,6 +52,33 @@
 					$_SESSION['refreshToken'] = $decodedResponse['refresh_token'];
 					$_SESSION['loggedIn'] = TRUE;
 					$_SESSION['username'] = $_POST['username'];
+					$_SESSION['acquiredID'] = getTokenInfo($_SESSION['authToken']);
+					
+					
+					if(isUserAdmin($_SESSION['acquiredID'], $_SESSION['authToken'])){
+						//Acquire admin-cli token to have the ability to create new users
+						
+						$ch = curl_init($tokenEndpoint);
+			
+						$postData = http_build_query([
+							'grant_type' => 'password',
+							'client_id' => 'admin-cli', //!!!!!
+							'username' => $username,
+							'password' => $password,
+						]);
+			
+						curl_setopt($ch, CURLOPT_POST, true);
+						curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			
+						$response = curl_exec($ch);
+						$decodedResponse = json_decode($response, true);
+						$_SESSION['adminToken'] = $decodedResponse['access_token'];
+						$_SESSION['adminRefreshToken'] = $decodedResponse['refresh_token'];
+						print_r($decodedResponse);
+					}
+
+					
 					header("Location: home.php");
 				} else {
 					$auth_error = TRUE;

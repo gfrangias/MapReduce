@@ -26,8 +26,11 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: zooops
+      JDBC_PARAMS: 'useSSL=false'
     ports:
-      - 443:8080
+      - 8080:8080
+    expose:
+      - 8080      
     depends_on:
       - mysql
     networks:

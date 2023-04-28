@@ -1,7 +1,9 @@
 <?php
 
 
-    function verifyToken(){
+    function verifyToken(bool $isAdminTokenToRefresh = false){
+
+
         if(!isset($_SESSION['authToken']) || !isset($_SESSION['refreshToken'])){
             session_destroy();
             session_unset();
@@ -12,12 +14,21 @@
         $client_secret = 'kw3rfyIlfTU0hVuUVyGt5DSxx4s3MZbC';
         $refresh_token = $_SESSION['refreshToken'];
 
+
         $data = array(
             'client_id' => $client_id,
             'client_secret' => $client_secret,
             'refresh_token' => $refresh_token,
             'grant_type' => 'refresh_token'
         );
+
+        if($isAdminTokenToRefresh){
+            $data = array(
+                'client_id' => 'admin-cli',
+                'refresh_token' => $_SESSION['adminRefreshToken'],
+                'grant_type' => 'refresh_token'
+            );
+        }
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -43,8 +54,38 @@
         
         $access_token = $token->access_token;
 
+        if($isAdminTokenToRefresh){
+            $_SESSION['adminToken'] = $access_token;
+            return;
+        }        
+
+
         $_SESSION['authToken'] = $access_token;
         
+    }
+
+    function getTokenInfo($accessToken) {
+        $ch = curl_init();
+    
+        $url = 'http://172.16.0.3:8080/auth/realms/master/protocol/openid-connect/userinfo';
+    
+        $headers = array(
+            'Authorization: Bearer ' . $accessToken,
+        );
+    
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    
+        $result = curl_exec($ch);
+    
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        } else {
+            $response = json_decode($result);
+            $userId = $response->sub;
+            return $userId;
+        }
     }
 
     function isUserAdmin($userId, $token) {
@@ -73,6 +114,38 @@
         }
     
         return $isAdmin;
+    }
+
+
+    function acquireToken(){
+    
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+          CURLOPT_URL => 'http://172.16.0.3:8080/auth/realms/master/protocol/openid-connect/token',
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_POST => true,
+          CURLOPT_POSTFIELDS => http_build_query(array(
+            'client_id' => 'ui_svc',
+            'client_secret' => 'kw3rfyIlfTU0hVuUVyGt5DSxx4s3MZbC',
+            'grant_type' => 'client_credentials',
+          )),
+          CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/x-www-form-urlencoded',
+          ),
+        ));
+        
+        $response = curl_exec($curl);
+        
+        if (curl_errno($curl)) {
+          $error_msg = curl_error($curl);
+          exit();
+        }
+        
+        curl_close($curl);
+
+        return json_decode($response,true);
     }
     
 ?>

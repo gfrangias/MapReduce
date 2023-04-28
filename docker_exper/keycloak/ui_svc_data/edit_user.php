@@ -66,7 +66,7 @@ if (isset($_GET['id'])) {
 
                 <div class="form-group">
                     <label for="username">Username:</label>
-                    <input type="text" class="form-control" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
+                    <input disabled type="text" class="form-control" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
                 </div>
 
                 <div class="form-group">
