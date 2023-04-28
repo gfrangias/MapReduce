@@ -5,8 +5,22 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+/**
+ * The distributor creates a list of indices and then distributes them to the workers to start processing the file uniformly.
+ * @author astratakis
+ * @author petroud
+ * @author gfraggias
+ * @author aavraam
+ *
+ */
 public class Distributor {
 	
+	/**
+	 * Creates a new instance of the Distributor
+	 * @param filepath			The file that will be distributed
+	 * @param numberOfWorkers	The total number of workers
+	 * @throws IOException		If the file does not exist or an IO error occurs.
+	 */
 	public Distributor(final String filepath, int numberOfWorkers) throws IOException {
 		this.filepath = filepath;
 		
@@ -16,8 +30,10 @@ public class Distributor {
 			throw new FileNotFoundException("Input file does not exist...");
 		}
 		
+		// Get the size of the file in bytes
 		this.fileSize = file.length();
 		
+		// The indices where the file will be split among workers
 		indices = new long[numberOfWorkers];
 		
 		long S = (long) (file.length() / numberOfWorkers);
