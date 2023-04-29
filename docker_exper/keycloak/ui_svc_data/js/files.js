@@ -105,7 +105,7 @@ async function fetchFiles() {
     datasetFormData.append('dataset-file', datasetFileInput.files[0]);
 
     const onUploadProgress = (progressEvent) => {
-      const percentage = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+      const percentage = Math.round((progressEvent.loaded / Math.ceil(progressEvent.total)) * 100);
       const progressBar = document.querySelector('.progress-bar');
   
       progressBar.style.width = `${percentage}%`;

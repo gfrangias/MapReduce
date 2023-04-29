@@ -1,19 +1,28 @@
 package org.example;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import io.javalin.Javalin;
+
 public class Main {
     public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        Javalin app = Javalin.create().start(7000);
+        System.out.println("Waiting for request to arrive...");
+        app.get("/api/hello", ctx -> {
+            ctx.result("Hello from Java application!");
+            System.out.println("API --> Received GET request from " + ctx.ip() + " at endpoint /api/hello");
+        });
 
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
+        app.get("/api/user/145", ctx -> {
+            ctx.result("Username: tasosmalakas");
+            System.out.println("API --> Received GET request from " + ctx.ip() + " at endpoint /api/user/145");
+        });
 
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
-        }
+        app.get("/api/container/info", ctx -> {
+            ctx.result("list of containers");
+            System.out.println("API --> Received GET request from " + ctx.ip() + "at endpoint /api/container/info");
+        });
+
+
+
+
     }
 }

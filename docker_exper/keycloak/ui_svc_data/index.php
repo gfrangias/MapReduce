@@ -190,13 +190,13 @@
 			}
 
 			if($auth_error){
-				echo '<div class="mt-3 alert alert-danger" role="alert">Wrong email or password!</div>';
+				echo '<div class="mt-3 alert alert-danger" role="alert">Wrong username or password!</div>';
 			}
 		?>
 		
 
 		<p class="mt-5 mb-3 text-muted">&copy;<script>document.write(new Date().getFullYear())</script> No copyrighting LOL </p>
-		<p class="mt-0 mb-3 text-muted">Version God bless us</p>
+		<p class="mt-0 mb-3 text-muted">Version <strong>vsam</strong> bless us</p>
 		
 	</form>
 </main>

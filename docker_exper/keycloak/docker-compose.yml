@@ -51,6 +51,45 @@ services:
     ports:
       - 80:80
 
+  zookeeper1:
+    image: zookeeper:3.7.0
+    container_name: zookeeper1
+    restart: always
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 server.3=zookeeper3:2888:3888
+    ports:
+      - "2181:2181"
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.11
+
+  zookeeper2:
+    image: zookeeper:3.7.0
+    container_name: zookeeper2
+    restart: always
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 server.3=zookeeper3:2888:3888
+    ports:
+      - "2182:2181"
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.12
+
+  zookeeper3:
+    image: zookeeper:3.7.0
+    container_name: zookeeper3
+    restart: always
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zookeeper1:2888:3888 server.2=zookeeper2:2888:3888 server.3=zookeeper3:2888:3888
+    ports:
+      - "2183:2181"
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.13
+
 networks:
   map_reduce_network:
     ipam:
