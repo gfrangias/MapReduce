@@ -11,7 +11,7 @@
         }
         $url = 'http://172.16.0.3:8080/auth/realms/master/protocol/openid-connect/token';
         $client_id = 'ui_svc';
-        $client_secret = 'kw3rfyIlfTU0hVuUVyGt5DSxx4s3MZbC';
+        $client_secret = 'vaC19724yiUpgcWYjfGAc6i9xvgwkdhf';
         $refresh_token = $_SESSION['refreshToken'];
 
 
@@ -128,7 +128,7 @@
           CURLOPT_POST => true,
           CURLOPT_POSTFIELDS => http_build_query(array(
             'client_id' => 'ui_svc',
-            'client_secret' => 'kw3rfyIlfTU0hVuUVyGt5DSxx4s3MZbC',
+            'client_secret' => 'vaC19724yiUpgcWYjfGAc6i9xvgwkdhf',
             'grant_type' => 'client_credentials',
           )),
           CURLOPT_HTTPHEADER => array(

@@ -209,6 +209,10 @@ session_start();
       font-size: 0.875rem;
       line-height: 1.5;
     }
+    .btn-upl {
+      background-color: #033894;
+      border-color: #033894;
+    }
 
     .progress-bar {
       background-image: linear-gradient(
@@ -262,7 +266,7 @@ session_start();
       <input type="file" class="form-control" id="dataset-file" name="dataset-file" required>
     </div>
     <div class="button-container">
-      <button id="upload-btn" class="btn btn-primary" disabled='true' name="submit">Upload files</button>
+      <button id="upload-btn" class="btn btn-primary btn-upl" disabled='true' name="submit">Upload files</button>
       <div class="progress" style="width: 200px;">
         <div class="progress-bar" role="progressbar" id="prbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
