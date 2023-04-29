@@ -1,8 +1,2 @@
 
-docker_exper/keycloak/mysql_data/ib_buffer_pool
-docker_exper/keycloak/mysql_data/ib_logfile0
-docker_exper/keycloak/mysql_data/ib_logfile1
-docker_exper/keycloak/mysql_data/ibdata1
-docker_exper/keycloak/mysql_data/ibtmp1
-docker_exper/keycloak/mysql_data/ib_buffer_pool
-docker_exper/keycloak/mysql_data/ib_buffer_pool
+docker_exper/keycloak/mysql_data/
