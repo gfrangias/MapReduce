@@ -29,6 +29,7 @@ public class Main {
             ZooWatcher zw = new ZooWatcher(zk);
             String znode = "/";
             ZNodeManager lister = new ZNodeManager(zk);
+            zw.watchZNode(znode);
             lister.listZNodes(znode);
             Thread.sleep(Long.MAX_VALUE);
         }
