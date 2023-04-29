@@ -16,7 +16,7 @@ services:
 
   zk1:
     container_name: zk1
-    image: zookeeper
+    image: zookeeper:3.6
     restart: always
     hostname: zk1
     ports:
@@ -30,7 +30,7 @@ services:
 
   zk2:
     container_name: zk2
-    image: zookeeper
+    image: zookeeper:3.6
     restart: always
     hostname: zk2
     ports:
@@ -44,7 +44,7 @@ services:
 
   zk3:
     container_name: zk3
-    image: zookeeper
+    image: zookeeper:3.6
     restart: always
     hostname: zk3
     ports:
