@@ -17,41 +17,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Submission Interface</title>
+    <title>MapReduce UI - Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+      .logo {
+        max-height: 50px;
+        max-width: 100%;
+    }
+    .header {
+        padding: 1rem;
+        padding-left: 2rem; /* Add some padding to move the logo away from the left corner */
+        padding-right: 2rem; /* Add some padding to move the user info away from the right corner */
+    }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center my-4">Job Submission Interface</h1>
-        <form action="upload.php" method="post" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="mapReduceFile" class="form-label">MapReduce File:</label>
-                <input type="file" class="form-control" id="mapReduceFile" name="mapReduceFile" required>
-            </div>
-            <div class="mb-3">
-                <label for="inputFile" class="form-label">Dataset File:</label>
-                <input type="file" class="form-control" id="inputFile" name="inputFile" required>
-            </div>
-            <button type="submit" class="btn btn-primary" name="submit">Submit Job</button>
-        </form>
-        <h2 class="my-4">Submitted Files</h2>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">File Name</th>
-                    <th scope="col">Size (MB)</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php include 'get_files.php'; ?>
-            </tbody>
-        </table>
+<div class="header d-flex align-items-center justify-content-between">
+    <a href="home.php">
+        <img src="/assets/brand/logo.png" alt="Logo" class="logo">
+    </a>
+    <nav>
+        <ul class="nav">
+            <li class="nav-item">
+                <a href="files.php" class="nav-link">File Manager</a>
+            </li>
+            <?php if ($_SESSION['username'] == 'admin'): ?>
+            <li class="nav-item">
+                <a href="keycloak_user_management.php" class="nav-link">User Manager</a>
+            </li>
+            <?php endif; ?>
+        </ul>
+    </nav>
+    <div class="user-info">
+        <span>Welcome, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong> | </span>
+        <a href="logout.php" class="btn btn-secondary btn-sm">Logout</a>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+</div>
 </body>
 </html>
 

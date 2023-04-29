@@ -1,35 +1,45 @@
 <?php
-include 'functions.php';
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+session_start();
+
+function saveFile($file, $targetDir) {
+  $filename = basename($file['name']);
+  $targetFile = $targetDir . '/' . $filename;
+  $i = 1;
+
+  while (file_exists($targetFile)) {
+    $filenameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
+    $extension = pathinfo($filename, PATHINFO_EXTENSION);
+    $filename = $filenameWithoutExt . '-' . $i . '.' . $extension;
+    $targetFile = $targetDir . '/' . $filename;
+    $i++;
+  }
+
+  move_uploaded_file($file['tmp_name'], $targetFile);
+  return $filename;
 }
-if(!isset($_SESSION['authToken']) || !isset($_SESSION['loggedIn'])){
-    header("Location: error.php");
-}
 
-verifyToken();
+header('Content-Type: application/json');
 
-if (isset($_POST['submit'])) {
-    $mapReduceFile = $_FILES['mapReduceFile'];
-    $inputFile = $_FILES['inputFile'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $username = $_SESSION['username'];
+  $mapreduceDir = "uploads/{$username}/mapreduce";
+  $datasetDir = "uploads/{$username}/mareduce";
 
-    $uploadDirectory = 'uploads/'.$_SESSION['username'].'/';
-    if (!file_exists($uploadDirectory)) {
-        mkdir($uploadDirectory, 0755, true);
-    }
-    $mapReduceFilePath = $uploadDirectory . basename($mapReduceFile['name']);
-    $inputFilePath = $uploadDirectory . basename($inputFile['name']);
+  if (!file_exists($mapreduceDir)) {
+    mkdir($mapreduceDir, 0777, true);
+  }
+  if (!file_exists($datasetDir)) {
+    mkdir($datasetDir, 0777, true);
+  }
 
-    echo $mapReduceFilePath;
-    
+  $mapreduceFilename = saveFile($_FILES['mapreduce-file'], $mapreduceDir);
+  $datasetFilename = saveFile($_FILES['dataset-file'], $datasetDir);
 
-    if (move_uploaded_file($mapReduceFile['tmp_name'], $mapReduceFilePath) &&
-        move_uploaded_file($inputFile['tmp_name'], $inputFilePath)) {
-        echo "Job files uploaded successfully!";
-    } else {
-        echo "An error occurred while uploading the job files. Please try again.";
-    }
+  echo json_encode([
+    'mapreduceFilename' => $mapreduceFilename,
+    'datasetFilename' => $datasetFilename,
+  ]);
 } else {
-    header("Location: index.php");
+  http_response_code(405);
+  echo json_encode(['error' => 'Method Not Allowed']);
 }
-?>

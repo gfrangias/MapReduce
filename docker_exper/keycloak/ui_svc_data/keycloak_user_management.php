@@ -25,7 +25,7 @@
     <!-- Custom CSS -->
     <style>
     body {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
     }
     .centered {
         display: flex;
@@ -128,13 +128,27 @@
     </style>
 </head>
 <body>
-    <div class="header d-flex align-items-center justify-content-between">
+<div class="header d-flex align-items-center justify-content-between">
+    <a href="home.php">
         <img src="/assets/brand/logo.png" alt="Logo" class="logo">
-        <div class="user-info">
-            <span>Welcome, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong> | </span>
-            <a href="logout.php" class="btn btn-secondary btn-sm">Logout</a>
-        </div>
+    </a>
+    <nav>
+        <ul class="nav">
+            <li class="nav-item">
+                <a href="files.php" class="nav-link">File Manager</a>
+            </li>
+            <?php if ($_SESSION['username'] == 'admin'): ?>
+            <li class="nav-item">
+                <a href="keycloak_user_management.php" class="nav-link">User Manager</a>
+            </li>
+            <?php endif; ?>
+        </ul>
+    </nav>
+    <div class="user-info">
+        <span>Welcome, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong> | </span>
+        <a href="logout.php" class="btn btn-secondary btn-sm">Logout</a>
     </div>
+</div>
     
     <div class="container centered">
         <div class="container custom-container">    
