@@ -45,6 +45,10 @@ services:
     volumes:
       - ./ui_svc_data:/var/www/html
       - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: www-data
+    group_add:
+      - docker
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.4

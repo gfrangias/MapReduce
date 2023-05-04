@@ -8,6 +8,10 @@ services:
       dockerfile: Dockerfile_ui
     volumes:
       - ./ui_java_project:/var/www/html/
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: www-data
+    group_add:
+      - docker
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.2

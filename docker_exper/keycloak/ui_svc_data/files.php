@@ -237,7 +237,12 @@ session_start();
         <img src="/assets/brand/logo.png" alt="Logo" class="logo">
     </a>
     <nav>
-        <ul class="nav">
+         <ul class="nav">
+            <?php if ($_SESSION['username'] == 'admin'): ?>
+            <li class="nav-item">
+                <a href="containers.php" class="nav-link">Container Manager</a>
+            </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a href="files.php" class="nav-link">File Manager</a>
             </li>
@@ -246,6 +251,7 @@ session_start();
                 <a href="keycloak_user_management.php" class="nav-link">User Manager</a>
             </li>
             <?php endif; ?>
+            
         </ul>
     </nav>
     <div class="user-info">
