@@ -10,9 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $postData = json_encode([
         'Image' => $imageName,
         'HostConfig' => $networkConfig,
-        'Env' => ['MYSQL_ROOT_PASSWORD=root']
+        'Env' => ['MYSQL_ROOT_PASSWORD=root'],
     ]);
-
+    $containerName = 'worker_'.uniqid();
     $url = "http://192.168.1.105:2375/containers/create";
 
     $ch = curl_init($url);
@@ -30,6 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($http_status >= 200 && $http_status < 300) {
         $response_data = json_decode($response, true);
         $container_id = $response_data['Id'];
+
+        //Rename the container
+        $url = "http://192.168.1.105:2375/containers/".$container_id."/rename?name=".$containerName;
+        $postData = json_encode(['name'=>$containerName]);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
 
         // Start the container
         $start_url = "http://192.168.1.105:2375/containers/{$container_id}/start";
