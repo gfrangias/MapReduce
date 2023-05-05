@@ -1,7 +1,7 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['container_id'])) {
     $container_id = $_POST['container_id'];
-    $url = "http://192.168.1.105:2375/containers/" . $container_id . "/unpause";
+    $url = "http://172.17.0.1:2375/containers/" . $container_id . "/unpause";
     
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");

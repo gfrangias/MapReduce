@@ -1,5 +1,5 @@
 <?php
-$api_url = 'http://192.168.1.105:2375/containers/json?all=1';
+$api_url = 'http://172.17.0.1:2375/containers/json?all=1';
 
 // Create a stream context for making the HTTP request
 $context = stream_context_create([

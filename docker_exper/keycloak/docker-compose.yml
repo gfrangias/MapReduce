@@ -4,9 +4,10 @@ version: '3.7'
 networks:
   map_reduce_network:
     name: map_reduce_net
+    driver: bridge
     ipam:
       config:
-        - subnet: 172.16.0.0/24
+        - subnet: 172.16.0.0/16
 
 
 services:

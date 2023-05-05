@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'Env' => ['MYSQL_ROOT_PASSWORD=root'],
     ]);
     $containerName = 'worker_'.uniqid();
-    $url = "http://192.168.1.105:2375/containers/create";
+    $url = "http://172.17.0.1:2375/containers/create";
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $container_id = $response_data['Id'];
 
         //Rename the container
-        $url = "http://192.168.1.105:2375/containers/".$container_id."/rename?name=".$containerName;
+        $url = "http://172.17.0.1:2375/containers/".$container_id."/rename?name=".$containerName;
         $postData = json_encode(['name'=>$containerName]);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         // Start the container
-        $start_url = "http://192.168.1.105:2375/containers/{$container_id}/start";
+        $start_url = "http://172.17.0.1:2375/containers/{$container_id}/start";
         $start_ch = curl_init($start_url);
         curl_setopt($start_ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($start_ch, CURLOPT_RETURNTRANSFER, true);

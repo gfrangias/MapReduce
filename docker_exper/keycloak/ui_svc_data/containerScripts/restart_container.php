@@ -1,7 +1,7 @@
 <?php
 if (isset($_POST['container_id'])) {
     $container_id = $_POST['container_id'];
-    $api_url = 'http://192.168.1.105:2375/containers/' . $container_id . '/restart';
+    $api_url = 'http://172.17.0.1:2375/containers/' . $container_id . '/restart';
 
     $context = stream_context_create([
         'http' => [
