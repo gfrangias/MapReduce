@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'HostConfig' => $networkConfig,
         'Env' => ['MYSQL_ROOT_PASSWORD=root'],
     ]);
-    $containerName = 'worker_'.uniqid();
+    $containerName = 'w'.uniqid();
     $url = "http://172.17.0.1:2375/containers/create";
 
     $ch = curl_init($url);

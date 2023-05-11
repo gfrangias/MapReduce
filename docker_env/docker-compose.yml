@@ -52,20 +52,6 @@ services:
       map_reduce_network:
         ipv4_address: 172.16.0.3
 
-  kc_initiator:
-    container_name: kc_initiator
-    build: .
-    volumes:
-      - ./keycloak_data:/app
-    environment:
-      KEYCLOAK_URL: http://172.16.0.3:8080
-      KEYCLOAK_USERNAME: admin
-      KEYCLOAK_PASSWORD: zooops
-    depends_on:
-      - keycloak
-    networks:
-      map_reduce_network:
-        ipv4_address: 172.16.0.5
 
   ui_svc:
     container_name: ui_svc
@@ -90,6 +76,8 @@ services:
       ZOO_SERVERS: server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
     ports:
       - 2181:2181
+    expose:
+      - 2181
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.11
@@ -103,6 +91,8 @@ services:
       ZOO_SERVERS: server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
     ports:
       - 2182:2181
+    expose:
+      - 2181
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.12
@@ -116,7 +106,57 @@ services:
       ZOO_SERVERS: server.1=zookeeper1:2888:3888;2181 server.2=zookeeper2:2888:3888;2181 server.3=zookeeper3:2888:3888;2181
     ports:
       - 2183:2181
+    expose:
+      - 2181
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.13
 
+
+  fathermonitor:
+      container_name: fathermonitor
+      build:
+        context: .
+        dockerfile: Dockerfile
+      environment:
+        CONTAINER_NAME: fathermonitor
+      depends_on:
+        - zookeeper1
+        - zookeeper2
+        - zookeeper3
+      ports:
+        - 7000:7000
+      networks:
+        map_reduce_network:
+          ipv4_address: 172.16.0.19
+  zoonavigator:
+    image: elkozmon/zoonavigator:0.7.1
+    container_name: zoonavigator
+    restart: unless-stopped
+    networks:
+        map_reduce_network:
+          ipv4_address: 172.16.0.20
+    ports:
+      - 9000:9000/tcp
+    environment:
+      ########## Server ##########
+
+      # Tells the HTTP server which port to bind to. To disable HTTP set this variable to disabled.
+      HTTP_PORT: 9000
+    
+      AUTO_CONNECT_CONNECTION_STRING: '172.16.0.11:2181,172.16.0.12:2181,172.16.0.13:2181'
+      
+      # Sets inactivity timeout for ZooKeeper client. If user doesn’t make any request during this period ZooKeeper
+      # connection will be closed and recreated for the future request if any. Note that user does not get logged out
+      # unlike in event of session timeout. This value is in milliseconds.
+      ZK_CLIENT_TIMEOUT_MILLIS: 15000
+
+      # Sets timeout for attempt to establish connection with ZooKeeper. This value is in milliseconds.
+      ZK_CONNECT_TIMEOUT_MILLIS: 15000
+
+      # Set the value to false to disable SASL authentication.
+      ZK_SASL_CLIENT: 'false'
+      
+      ZK_CLIENT_CNXN_SOCKET: 'org.apache.zookeeper.ClientCnxnSocketNIO'
+
+      

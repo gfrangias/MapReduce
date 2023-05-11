@@ -23,7 +23,7 @@
 			$keycloakBaseUrl = 'http://172.16.0.3:8080';
 			$realm = 'master';
 			$client_id = 'ui_svc';
-			$client_secret  = 'eVjxA3mr9Uyet48lgEWmnZddkEzmwu5K';
+			$client_secret  = 'MR1c8EWLxy3YjEC4Y6OSb7rbtQkbAkTa';
 
 			$tokenEndpoint = $keycloakBaseUrl . '/auth/realms/' . $realm . '/protocol/openid-connect/token';
 
