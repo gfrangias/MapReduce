@@ -1,6 +1,0 @@
-FROM openjdk:11
-RUN java --version
-ADD /ui_java_project/ /var/www/html/
-RUN ls -l /var/www/html/out/artifacts/ui_java_project_jar/
-CMD java -jar /var/www/html/out/artifacts/ui_java_project_jar/ui_java_project.jar
-EXPOSE 80
