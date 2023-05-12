@@ -1,0 +1,5 @@
+FROM php:8.0-apache
+
+# Install the Redis extension
+RUN pecl install redis \
+    && docker-php-ext-enable redis

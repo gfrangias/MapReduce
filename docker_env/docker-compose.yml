@@ -55,12 +55,13 @@ services:
 
   ui_svc_1:
     container_name: ui_svc_1
-    image: php:8.0-apache
+    build: 
+      context: .
+      dockerfile: Dockerfile_ui    
     volumes:
       - ./ui_svc_data:/var/www/html
       - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
       - /var/run/docker.sock:/var/run/docker.sock
-    user: www-data
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.4
@@ -69,12 +70,13 @@ services:
 
   ui_svc_2:
     container_name: ui_svc_2
-    image: php:8.0-apache
+    build: 
+      context: .
+      dockerfile: Dockerfile_ui
     volumes:
       - ./ui_svc_data:/var/www/html
       - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
       - /var/run/docker.sock:/var/run/docker.sock
-    user: www-data
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.5
@@ -83,12 +85,13 @@ services:
 
   ui_svc_3:
     container_name: ui_svc_3
-    image: php:8.0-apache
+    build: 
+      context: .
+      dockerfile: Dockerfile_ui   
     volumes:
       - ./ui_svc_data:/var/www/html
       - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
       - /var/run/docker.sock:/var/run/docker.sock
-    user: www-data
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.6
@@ -105,6 +108,15 @@ services:
         ipv4_address: 172.16.0.254
     ports:
       - 80:80
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.253
+    expose:
+      - 6379
 
   zookeeper1:
     image: zookeeper
