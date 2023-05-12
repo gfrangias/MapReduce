@@ -53,8 +53,8 @@ services:
         ipv4_address: 172.16.0.3
 
 
-  ui_svc:
-    container_name: ui_svc
+  ui_svc_1:
+    container_name: ui_svc_1
     image: php:8.0-apache
     volumes:
       - ./ui_svc_data:/var/www/html
@@ -64,6 +64,45 @@ services:
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.4
+    expose:
+      - 80
+
+  ui_svc_2:
+    container_name: ui_svc_2
+    image: php:8.0-apache
+    volumes:
+      - ./ui_svc_data:/var/www/html
+      - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: www-data
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.5
+    expose:
+      - 80
+
+  ui_svc_3:
+    container_name: ui_svc_3
+    image: php:8.0-apache
+    volumes:
+      - ./ui_svc_data:/var/www/html
+      - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+    user: www-data
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.6
+    expose:
+      - 80
+
+  haproxy:
+    image: haproxy:latest
+    container_name: proxyLB
+    volumes:
+      - ./haproxy_data/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      map_reduce_network:
+        ipv4_address: 172.16.0.254
     ports:
       - 80:80
 
@@ -129,6 +168,7 @@ services:
       networks:
         map_reduce_network:
           ipv4_address: 172.16.0.19
+      
   zoonavigator:
     image: elkozmon/zoonavigator:0.7.1
     container_name: zoonavigator
