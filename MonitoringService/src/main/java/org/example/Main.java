@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.net.*;
-import org.example.Jsonizer;
 
 
 public class Main {
@@ -19,21 +18,36 @@ public class Main {
 
     public static void main(String[] args) {
 
+        /**
+         * Tha name of the container should be obtained during
+         * its creation. For testing purposes uncomment the
+         * second section.
+         */
         //String containerName = System.getenv("CONTAINER_NAME");
-        String containerName = "mdimitrispetrou";
-        if(containerName == null){
+        String ipAddress = null;
+        String containerName = "mjimy";
+
+        if (containerName == null) {
             throw new Error("Environment variable CONTAINER_NAME must be set!");
         }
 
-        String ipAddress = "192.168.1.6";
-        /*
+        /**
+         If this code is run by the monitor 'fathermonitor' used
+         during systems first deployment then it should wait a bit for
+         the zookeeper ensemble to initialize, otherwise any further requests
+         will fail. Decide the ip of the container, so it can be stored in the ephemeral
+         znode of the node too.
+         */
+
+
         try {
             InetAddress localHost = InetAddress.getLocalHost();
             ipAddress = localHost.getHostAddress();
-            System.out.println("Internal IP Address: " + ipAddress);
+            System.out.println("Internal IP Address:" + ipAddress);
         } catch (UnknownHostException e) {
             throw new Error("Unknown host exception");
         }
+        /*
         if(containerName.contentEquals("fathermonitor")) {
             try {
                 // Wait for 30 seconds
@@ -45,16 +59,26 @@ public class Main {
             }
         }*/
 
+        /**
+         * Select a ZK instance for connection. The connection
+         * is performed towards a random ZK instance of the ensemble.
+         */
         String zkAddress = Main.zkAddresses[rng.nextInt(Main.zkAddresses.length)];
-
         System.out.println("Will contact ZK instance at: " + zkAddress);
 
+        /**
+         * Init a container based web server for accepting requests
+         * from others in MR network.
+         */
         Javalin app = Javalin.create().start(7000);
         System.out.println("Waiting for requests to arrive...");
 
 
+        /**
+         * Set some API basic endpoints
+         */
         app.get("/api/zk/status", ctx -> {
-            ctx.result("ZK is active: " + zkAlive);
+            ctx.result("ZK is active and connected: " + zkAlive);
         });
 
         app.get("/ping", ctx -> {
@@ -62,43 +86,51 @@ public class Main {
         });
 
 
-
         try {
             ZooKeeper zk = new ZooKeeper("192.168.1.105:2181", 20000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
-            String data = null;
 
-            //Am I leader at the beginning?
-            if(containerName.contentEquals("mdimitrispetro")){
-                zController.registerPersistentZnode("/monitors/leader", containerName);
-                data = "{\"ipAddress\":\"192.168.1.6\", \"occupied\":0, \"leaderIP\":\""+ipAddress+"\"}";
-            }else{
-                //Sadly I am not the leader, so who is the leader?
-                String leaderData  = new String(zk.getData("/monitors/"+ zController.getStringData("/monitors/leader"), zController, null));
-                zController.setLeadingMonitorIP(Jsonizer.jsonStringToObject(leaderData).getString("ipAddress"));
-                data = "{\"ipAddress\":\"192.168.1.6\", \"occupied\":0, \"leaderIP\":\""+zController.getLeadingMonitorIP()+"\"}";
-            }
+            //Register self into Zookeeper as monitor or fathermonitor (decided upon container name)
+            zController.registerMe(containerName, ipAddress);
 
-            zController.registerEphemeralZnode("/monitors", "");
-            zController.registerEphemeralZnode("/monitors/" + containerName, data);
-
-
-            app.get("/api/zk/znodes/monitors", ctx -> {
+            //List all monitors
+            app.get("/api/zk/monitors", ctx -> {
                 ctx.result(zController.listAllZNodes("/monitors"));
+                ctx.status(200); // Set the HTTP status code
             });
 
-            app.get("/api/zk/znodes/workers", ctx -> {
+            //List all workers
+            app.get("/api/zk/workers", ctx -> {
                 ctx.result(zController.listAllZNodes("/workers"));
+                ctx.status(200); // Set the HTTP status code
             });
 
-            app.get("/api/zk/znode/mydata", ctx -> {
-                ctx.result(zController.listMyData("/monitors/" + containerName));
+            //List leader information
+            app.get("/api/zk/leader", ctx -> {
+                ctx.json(zController.getLeaderData()); // Set the response body to be the json containing leader info
+                ctx.status(200); // Set the HTTP status code
+            });
+
+            //Watch node with id = id
+            app.post("/api/zk/watchme/{id}", ctx -> {
+                System.out.println("Will try to watch znode with id:" + ctx.pathParam("id"));
+                zController.watchNode(ctx.pathParam("id")); // Make this monitor to watch the client requested attention
+                ctx.status(200); // Set the HTTP status code
+            });
+
+            //Handle Job with id = id
+            app.post("/api/job/assign/{id}", ctx -> {
+                if(!zController.iAmOccupied(containerName)){
+                    System.out.println("Will handle job...");
+                    ctx.status(200);
+                }else{
+                    ctx.status(503); //Unavailable if already committed to job
+                }
             });
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
     }
 }
