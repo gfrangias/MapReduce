@@ -10,16 +10,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeManager.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/Dockerfile_ui" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/Dockerfile_ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/deploy_worker.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/deploy_worker.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/functions.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/functions.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/decoded.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/files.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/files.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/json.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/php.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/uploads/vsam/mapreduce/program.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/uploads/vsam/mareduce/dataset.csv" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,25 +44,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;Z:/mp/MapReduce/MonitoringService&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;Y:/MP/MapReduce/MonitoringService/src/main/java/org/example/Main.java&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "Z:/mp/MapReduce/MonitoringService",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "onboarding.tips.debug.path": "Y:/MP/MapReduce/MonitoringService/src/main/java/org/example/Main.java",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "configurable.group.tools",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Application.Main">
     <configuration name="Jsonizer (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Jsonizer" />
@@ -116,6 +120,12 @@
       <workItem from="1683820679130" duration="328000" />
       <workItem from="1683821105717" duration="11749000" />
       <workItem from="1683836695532" duration="1677000" />
+      <workItem from="1684260472909" duration="1304000" />
+      <workItem from="1684344144858" duration="5610000" />
+      <workItem from="1684355334108" duration="16000" />
+      <workItem from="1684426666003" duration="4363000" />
+      <workItem from="1684682566484" duration="4161000" />
+      <workItem from="1684753364131" duration="6712000" />
     </task>
     <servers />
   </component>
