@@ -60,13 +60,18 @@ services:
       dockerfile: Dockerfile_ui    
     volumes:
       - ./ui_svc_data:/var/www/html
-      - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
+      - ./filedb/uploads:/var/www/html/uploads
+      - ./apache_init/php.ini:/usr/local/etc/php/php.ini
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.4
     expose:
       - 80
+    command: >
+      bash -c "cd /var/www/html && composer require docker-php/docker-php && chmod 666 /var/run/docker.sock && apache2-foreground"
+    ports:
+      - 7777:80
 
   ui_svc_2:
     container_name: ui_svc_2
@@ -75,7 +80,8 @@ services:
       dockerfile: Dockerfile_ui
     volumes:
       - ./ui_svc_data:/var/www/html
-      - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
+      - ./filedb/uploads:/var/www/html/uploads
+      - ./apache_init/php.ini:/usr/local/etc/php/php.ini
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       map_reduce_network:
@@ -90,7 +96,8 @@ services:
       dockerfile: Dockerfile_ui   
     volumes:
       - ./ui_svc_data:/var/www/html
-      - ./ui_svc_data/php.ini:/usr/local/etc/php/php.ini
+      - ./filedb/uploads:/var/www/html/uploads
+      - ./apache_init/php.ini:/usr/local/etc/php/php.ini
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       map_reduce_network:
