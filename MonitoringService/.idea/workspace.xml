@@ -14,6 +14,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZooWatcher.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/Dockerfile_ui" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/Dockerfile_ui" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/docker-compose.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" afterDir="false" />
@@ -125,7 +126,7 @@
       <workItem from="1684355334108" duration="16000" />
       <workItem from="1684426666003" duration="4363000" />
       <workItem from="1684682566484" duration="4161000" />
-      <workItem from="1684753364131" duration="6712000" />
+      <workItem from="1684753364131" duration="20227000" />
     </task>
     <servers />
   </component>
