@@ -1,0 +1,5 @@
+{
+    "require": {
+        "docker-php/docker-php": "^1.24"
+    }
+}
