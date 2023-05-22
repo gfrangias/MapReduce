@@ -1,5 +1,9 @@
 <?php
-session_start();
+  include 'functions.php';
+  if (session_status() == PHP_SESSION_NONE) {
+      session_start();
+  }
+  verifyToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -1,11 +1,10 @@
 <?php
-    include 'functions.php';
-    if (session_status() == PHP_SESSION_NONE) {
-        session_start();
-    }
-    verifyToken();
+  include 'functions.php';
+  if (session_status() == PHP_SESSION_NONE) {
+      session_start();
+  }
+  verifyToken();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
