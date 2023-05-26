@@ -26,7 +26,7 @@ if ($response === false) {
     // Build the table with the container information
     echo "<table class='table table-striped small-text tight-rows'>";
     echo "<thead>";
-    echo "<tr><th>ID</th><th>Name</th><th>Image</th><th>Created</th><th>IPv4</th><th>State</th><th>Status</th><th>Actions</th></tr>";
+    echo "<tr><th>ID</th><th>Name</th><th>Image</th><th>Created</th><th>IPv4</th><th>State</th><th>Status</th><th>Log</th><th>Actions</th></tr>";
     echo "</thead>";
     echo "<tbody>";
 
@@ -51,6 +51,7 @@ if ($response === false) {
             echo "<td>" . $container['State'] . "</td>";
         }
         echo "<td>" . $container['Status'] . "</td>";
+        echo "<td>" . "<button title='Show Log' class='btn btn-primary btn-sm' onclick='showLog(\"" . substr($container['Id'], 0, 12) . "\")'><i class='fas fa-file-alt'></i></button>"."</td>";
         echo "<td>";
         if (strpos($container['Status'], 'Exited') !== false) {
             echo "<button title='Bring Up' class='btn btn-success btn-sm btn-act' onclick='restartContainer(\"" . $container['Id'] . "\")'><i class='fas fa-arrow-up' style='color: white;'></i></button>";

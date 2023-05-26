@@ -423,6 +423,74 @@
             // Send the POST request with the FormData object
             xhr.send(formData);
         }
+
+        function showLog(id) {
+            var win = window.open('', 'Container Log ' + id, 'width=500,height=500');
+            win.document.title = "Log File for container " + id;
+
+            // Check if this window has been opened before
+            if(win.document.getElementsByTagName('textarea').length === 0) {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css'; // Change this to your local bootstrap CSS file if needed
+                win.document.head.appendChild(link);
+
+                var container = win.document.createElement('div');
+                container.className = 'container p-3';
+
+                var textarea = win.document.createElement('textarea');
+                textarea.className = 'form-control mb-3';
+                textarea.readOnly = true;
+                textarea.style.resize = 'none'; // Disable manual resize
+                textarea.style.height = '80%'; // Set initial height
+                textarea.style.overflow = 'auto'; // Enable scroll bar
+                container.appendChild(textarea);
+
+                var buttonContainer = win.document.createElement('div');
+                buttonContainer.className = 'd-flex justify-content-end';
+                container.appendChild(buttonContainer);
+
+                var refreshButton = win.document.createElement('button');
+                refreshButton.textContent = 'Refresh';
+                refreshButton.className = 'btn btn-primary mr-2';
+                refreshButton.onclick = function() {
+                    fetchLogs(id, textarea);
+                }
+                buttonContainer.appendChild(refreshButton);
+
+                var closeButton = win.document.createElement('button');
+                closeButton.textContent = 'Close';
+                closeButton.className = 'btn btn-secondary';
+                closeButton.onclick = function() {
+                    win.close();
+                }
+                buttonContainer.appendChild(closeButton);
+
+                win.document.body.appendChild(container);
+
+                fetchLogs(id, textarea);
+            } else {
+                // If the window is already opened, simply refresh the logs
+                var textarea = win.document.getElementsByTagName('textarea')[0];
+                fetchLogs(id, textarea);
+            }
+        }
+
+        function fetchLogs(id, textarea) {
+            fetch('containerScripts/fetch_containerlog.php?id=' + id)
+            .then(response => response.text())
+            .then(logText => {
+                // Remove non-printable characters
+                logText = logText.replace(/[^ -~\s]/g, '');
+
+                // Update the textarea
+                textarea.textContent = logText;
+
+                // Adjust textarea height based on content
+                textarea.style.height = '';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            });
+        }
 </script>
 </body>
 </html>
