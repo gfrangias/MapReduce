@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ArtifactsWorkspaceSettings">
     <artifacts-to-build>
-      <artifact name="MonitoringService:jar" />
+      <artifact name="monitor" />
     </artifacts-to-build>
   </component>
   <component name="AutoImportSettings">
@@ -10,20 +10,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/MonitoringService_jar.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/artifacts/MonitoringService_jar/MonitoringService.jar" beforeDir="false" afterPath="$PROJECT_DIR$/out/artifacts/MonitoringService_jar/MonitoringService.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZooWatcher.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/Dockerfile_ui" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/Dockerfile_ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/decoded.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/files.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/files.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/json.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/php.ini" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/uploads/vsam/mapreduce/program.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/uploads/vsam/mareduce/dataset.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/monitor.jar" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/monitor.jar" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,20 +44,25 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "Z:/mp/MapReduce/MonitoringService",
+    "last_opened_file_path": "Z:/mp/MapReduce/docker_env",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "onboarding.tips.debug.path": "Y:/MP/MapReduce/MonitoringService/src/main/java/org/example/Main.java",
-    "project.structure.last.edited": "Project",
+    "project.structure.last.edited": "Artifacts",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "configurable.group.tools",
+    "settings.editor.selected.configurable": "configurable.group.editor",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="mvn clean install" />
+    </option>
+  </component>
   <component name="RunManager" selected="Application.Main">
     <configuration name="Jsonizer (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Jsonizer" />
@@ -126,11 +124,17 @@
       <workItem from="1684355334108" duration="16000" />
       <workItem from="1684426666003" duration="4363000" />
       <workItem from="1684682566484" duration="4161000" />
-      <workItem from="1684753364131" duration="20585000" />
+      <workItem from="1684753364131" duration="20776000" />
+      <workItem from="1685034806321" duration="11211000" />
+      <workItem from="1685120364731" duration="16632000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

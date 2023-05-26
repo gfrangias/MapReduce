@@ -18,28 +18,24 @@ public class Main {
 
     public static void main(String[] args) {
 
-        /**
+        /*
          * Tha name of the container should be obtained during
          * its creation. For testing purposes uncomment the
          * second section.
          */
-        //String containerName = System.getenv("CONTAINER_NAME");
+        String containerName = System.getenv("CONTAINER_NAME");
+        //String containerName = "mjimy";
         String ipAddress = null;
-        String containerName = "mjimy";
+
 
         if (containerName == null) {
             throw new Error("Environment variable CONTAINER_NAME must be set!");
         }
 
-        /**
-         If this code is run by the monitor 'fathermonitor' used
-         during systems first deployment then it should wait a bit for
-         the zookeeper ensemble to initialize, otherwise any further requests
-         will fail. Decide the ip of the container, so it can be stored in the ephemeral
-         znode of the node too.
-         */
-
-
+        /*
+            Find out what's my internal IP address to store it in my ephemeral
+            znode
+        */
         try {
             InetAddress localHost = InetAddress.getLocalHost();
             ipAddress = localHost.getHostAddress();
@@ -47,7 +43,15 @@ public class Main {
         } catch (UnknownHostException e) {
             throw new Error("Unknown host exception");
         }
+
+        //ipAddress = "192.168.1.6";
+
         /*
+         If this code is run by the monitor 'fathermonitor' used
+         during systems first deployment then it should wait a bit for
+         the zookeeper ensemble to initialize, otherwise any further requests
+         will fail.
+         */
         if(containerName.contentEquals("fathermonitor")) {
             try {
                 // Wait for 30 seconds
@@ -57,16 +61,16 @@ public class Main {
             } catch (InterruptedException e) {
                 throw new Error("Cannot wait for you baby...");
             }
-        }*/
+        }
 
-        /**
+        /*
          * Select a ZK instance for connection. The connection
          * is performed towards a random ZK instance of the ensemble.
          */
         String zkAddress = Main.zkAddresses[rng.nextInt(Main.zkAddresses.length)];
         System.out.println("Will contact ZK instance at: " + zkAddress);
 
-        /**
+        /*
          * Init a container based web server for accepting requests
          * from others in MR network.
          */
@@ -87,7 +91,7 @@ public class Main {
 
 
         try {
-            ZooKeeper zk = new ZooKeeper("192.168.1.105:2181", 20000, null);
+            ZooKeeper zk = new ZooKeeper(zkAddress, 20000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
 
@@ -114,8 +118,11 @@ public class Main {
 
             //Watch node with id = id
             app.post("/api/zk/watchme/{id}", ctx -> {
-                System.out.println("Will try to watch znode with id:" + ctx.pathParam("id"));
-                zController.watchNode(ctx.pathParam("id")); // Make this monitor to watch the client requested attention
+                System.out.println("Will try to watch monitor znode with id:" + ctx.pathParam("id"));
+
+                zController.watchNode("/monitors/"+ctx.pathParam("id")); // Make this monitor to watch the client requested attention
+
+                System.out.println("I am successfully watching monitor znode with id:" + ctx.pathParam("id"));
                 ctx.status(200); // Set the HTTP status code
             });
 

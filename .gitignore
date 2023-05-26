@@ -1,2 +1,3 @@
 docker_env/mysql_data/
 docker_env/ui_svc_data/vendor/
+docker_env/filedb/uploads/mapreduce/photo_2023-05-15_16-19-20.jpg

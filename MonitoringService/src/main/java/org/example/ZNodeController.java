@@ -5,20 +5,17 @@ import org.apache.zookeeper.data.Stat;
 import javax.json.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ZNodeController implements Watcher {
 
     private ZooKeeper zk;
     private String leadingMonitorIP;
+    private String monitorName;
+    private String electoralNodeName;
     public ZNodeController(ZooKeeper zk_arg){
         this.zk = zk_arg;
-    }
-
-
-    public String getLeadingMonitorIP() throws Exception {
-        leadingMonitorIP = getLeaderData().getString("ipAddress");
-        return "192.168.1.105";
     }
 
     @Override
@@ -29,10 +26,13 @@ public class ZNodeController implements Watcher {
             // Perform further actions based on the deleted znode path
             if (deletedZNodePath.equals("/monitors/leader")) {
                 // Should elect new leader, get into elections process
-                electLeader();
+                try {
+                    electLeader();
+                } catch (Exception e) {
+                }
             } else if (deletedZNodePath.startsWith("/workers")) {
-                //Some worker failed, time to see what it was doing and reassign its job
-                handleWorkerFailure(deletedZNodePath);
+                // Shit some worker failed, time to see what it was doing and reassign its job
+                //handleWorkerFailure(deletedZNodePath);
             }
         }
     }
@@ -47,6 +47,7 @@ public class ZNodeController implements Watcher {
     public void registerMe(String znodeName, String myIP) throws Exception {
 
         String data;
+        this.monitorName = znodeName;
 
         /*
          * 2 cases:
@@ -61,19 +62,29 @@ public class ZNodeController implements Watcher {
                 System.out.println("As a fathermonitor I will init the znode of monitors...");
                 registerPersistentZnode("/monitors", "");
             }
+            //Init the /elections znode if not exists
+            stat = this.zk.exists("/elections", false);
+            if (stat == null) {
+                System.out.println("As a fathermonitor I will init the znode of elections...");
+                registerPersistentZnode("/elections", "");
+            }
 
             //Register the leader to its dedicated znode
             registerEphemeralZnode("/monitors/leader", znodeName);
 
-            //Register it also as a plain monitor. Leader though is not able to handle jobs
+            //Register it also as a plain monitor. Leader though is not considered to handle jobs
             //so set occupied to 1 forever.
-            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":1, \"leaderIP\":\""+myIP+"\"}";
+            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":1}";
             registerEphemeralZnode("/monitors/"+znodeName, data);
 
         }else{
             //Register plain monitor
-            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":0, \"leaderIP\":\""+getLeadingMonitorIP()+"\"}";
+            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":0}";
             registerEphemeralZnode("/monitors/"+znodeName, data);
+
+            //Should create my node for possible elections in the future
+            this.electoralNodeName = registerElectoralNode();
+            System.out.println("I register my electoral znode in: "+this.electoralNodeName);
 
             //If I am a plain monitor then the fathermonitor should watch me for crashes
             //and I should watch him for crashes too.
@@ -81,7 +92,7 @@ public class ZNodeController implements Watcher {
             //Ask the leader to watch me
             HttpClient.post(url,null);
             //And I will watch the leader
-            watchNode("/monitors/"+getLeaderName());
+            watchNode("/monitors/leader");
         }
     }
 
@@ -101,20 +112,89 @@ public class ZNodeController implements Watcher {
 
     /**
      * Make this monitor a watcher for a specified znode name in /monitors/
-     * @param znodeName
+     * @param znodePath
      */
-    public void watchNode(String znodeName) throws Exception {
+    public void watchNode(String znodePath) throws Exception {
         // Check if the znode exists
-        Stat stat = zk.exists("/monitors/"+znodeName, false);
+        Stat stat = zk.exists(znodePath, this);
 
         if (stat != null) {
             // Start watching the znode for changes
-            zk.getData("/monitors/"+znodeName, true, null);
+            zk.getData(znodePath, this, null);
         } else {
             System.out.println("ZNode does not exist.");
         }
     }
 
+    /**
+     * Used for registering an electoral znode in zk for the current
+     * monitor. The znode created will be used in case the leader monitor
+     * fails. The znodes created are sequential and every
+     * node receives a name based on the sequence it entered the electoral
+     * znode /elections.
+     * @return The path of the electoral node of this monitor
+     */
+    public String registerElectoralNode() throws Exception{
+        String pathWithSequence = zk.create("/elections/cand_",new byte[]{}, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+        return pathWithSequence;
+    }
+
+    /**
+     * It 'pops' the minimum electoral node from /elections znode to
+     * decide the new leader in case the previous leader is dead.
+     */
+    public void electLeader() throws Exception{
+        List<String> children = zk.getChildren("/elections", false);
+        Collections.sort(children);
+        String smallestChild = "/elections/"+children.get(0);
+
+        if(smallestChild.equals(this.electoralNodeName)) {
+            System.out.println("I am the leader");
+            //Reserve leader zNode
+            registerEphemeralZnode("/monitors/leader", this.monitorName);
+            acquireLeadershipRights("/monitors");
+        }else{
+            //Sadly not my turn yet to become leader. I must watch the new leader then
+            System.out.println("Habemus Papam!");
+            System.out.println("Waiting for him to tell me to watch him...");
+        }
+    }
+
+    /**
+     * Make the new elected leader to watch the other monitors as
+     * long as this is the job of the leader.
+     */
+    public void acquireLeadershipRights(String znodeParentDir) throws Exception{
+        List<String> children = zk.getChildren(znodeParentDir, this);
+        // Watch each child node
+        for (String child : children) {
+            //Don't want to monitor leader (it's me) and eventually a zombie znode named fathermonitor
+            if (child.equals("leader") || child.equals("fathermonitor")) {
+                continue; // Skip watching this child
+            }
+            String childPath = znodeParentDir + "/" + child;
+            zk.exists(childPath, this);
+        }
+        JsonObject json = null;
+        String url = null;
+
+        //I should ask them to watch me when I am ready to be watched
+        for (String child : children) {
+            //Don't want to monitor leader (it's me) and eventually a zombie znode named fathermonitor
+            //or my natural znode
+            if (child.equals("leader") || child.equals("fathermonitor") || child.equals(this.monitorName)) {
+                continue; // Skip watching this child
+            }
+            json = getMonitorData(child);
+            url = "http://"+json.getString("ipAddress")+":7000/api/zk/watchme/leader";
+            //Ask my child to watch me
+            HttpClient.post(url,null);
+        }
+
+        System.out.println("I acquired leadership responsibility of watching all child monitors. I am the king!");
+        //If the monitor that became leader had a job previously, his job should be reassigned
+        //to a new monitor because leader is not supposed to handle jobs.
+    }
 
     public void registerEphemeralZnode(String znodeName, String data) throws Exception {
         Stat stat = this.zk.exists(znodeName, false); // Check if the ZNode already exists
@@ -125,12 +205,12 @@ public class ZNodeController implements Watcher {
             CreateMode createMode = CreateMode.EPHEMERAL; // Set the create mode for the ZNode
 
             this.zk.create(znodeName, byteData, ZooDefs.Ids.OPEN_ACL_UNSAFE, createMode);
+            this.zk.exists(znodeName, this);
             System.out.println("ZNode created: " + znodeName);
         } else {
             System.out.println("ZNode already exists: " + znodeName);
         }
     }
-
 
     public void registerPersistentZnode(String znodeName, String data) throws Exception {
         Stat stat = this.zk.exists(znodeName, false); // Check if the ZNode already exists
@@ -149,14 +229,6 @@ public class ZNodeController implements Watcher {
     }
 
 
-    public void electLeader(){
-
-    }
-
-    public void handleWorkerFailure(String znodePath){
-
-    }
-
     /**
      * Returns all children znodes of persistent znode specified.
      * @param znode the Znode of which the childrens are requested
@@ -166,6 +238,7 @@ public class ZNodeController implements Watcher {
         List<String> children = zk.getChildren(znode, null);
         return children.toString();
     }
+
 
     /**
      * Returns the information of a node data based on the node name
@@ -204,9 +277,22 @@ public class ZNodeController implements Watcher {
         return jsonObj;
     }
 
+    /**
+     * @return The name of the monitor currently in /monitors/leader
+     * @throws Exception
+     */
     public String getLeaderName() throws Exception{
         String fatherName = new String(zk.getData("/monitors/leader", null, null));
         return fatherName;
+    }
+
+    /**
+     * @return The IP address of the leading monitor inside the map_reduce_network
+     * @throws Exception
+     */
+    public String getLeadingMonitorIP() throws Exception {
+        leadingMonitorIP = getLeaderData().getString("ipAddress");
+        return leadingMonitorIP;
     }
 
     public String listChildrenData(String znodeName) throws Exception {
