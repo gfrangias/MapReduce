@@ -3,6 +3,9 @@
   if (session_status() == PHP_SESSION_NONE) {
       session_start();
   }
+  if ($_SESSION['username']!='admin'){
+    header('Location: error.php?s=2');
+  }
   verifyToken();
 ?>
 <!DOCTYPE html>
@@ -122,6 +125,7 @@
         border-radius: 5px;
         overflow: hidden;
     }
+    
 
     /* Add these rules to apply rounded corners to the first and last rows in the table */
     table tr:first-child th:first-child {
@@ -285,6 +289,9 @@
     </a>
     <nav>
     <ul class="nav">
+            <li class="nav-item">
+                <a href="jobs.php" class="nav-link">Job Manager</a>
+            </li>
             <?php if ($_SESSION['username'] == 'admin'): ?>
             <li class="nav-item">
                 <a href="containers.php" class="nav-link">Container Manager</a>

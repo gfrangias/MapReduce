@@ -45,6 +45,9 @@
     </a>
     <nav>
         <ul class="nav">
+            <li class="nav-item">
+                <a href="jobs.php" class="nav-link">Job Manager</a>
+            </li>
             <?php if ($_SESSION['username'] == 'admin'): ?>
             <li class="nav-item">
                 <a href="containers.php" class="nav-link">Container Manager</a>

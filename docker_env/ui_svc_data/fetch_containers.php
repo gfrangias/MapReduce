@@ -40,7 +40,6 @@ if ($response === false) {
         echo "<td>" . array_values($container['NetworkSettings']['Networks'])[0]['IPAddress']. "</td>";
         if (strpos($container['State'], 'running') !== false) {
             echo "<td>" . "<span class='green-bullet'></span>". $container['State'] ."</td>";
-
         } elseif (strpos($container['State'], 'paused') !== false){
             echo "<td>" . "<span class='yellow-bullet'></span>". $container['State'] ."</td>";
         } elseif (strpos($container['State'], 'restarting') !== false){
