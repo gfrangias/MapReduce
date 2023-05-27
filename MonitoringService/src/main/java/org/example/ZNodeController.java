@@ -54,7 +54,7 @@ public class ZNodeController implements Watcher {
          * -Register the fathermonitor
          * -Register a simple monitor
          */
-        if(znodeName.contentEquals("fathermonitor")){
+        if(znodeName.contentEquals("fathermonitor")) {
 
             //Init the /monitors node if not exists
             Stat stat = this.zk.exists("/monitors", false);
@@ -134,7 +134,7 @@ public class ZNodeController implements Watcher {
      * znode /elections.
      * @return The path of the electoral node of this monitor
      */
-    public String registerElectoralNode() throws Exception{
+    public String registerElectoralNode() throws Exception {
         String pathWithSequence = zk.create("/elections/cand_",new byte[]{}, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
         return pathWithSequence;
     }
@@ -143,7 +143,7 @@ public class ZNodeController implements Watcher {
      * It 'pops' the minimum electoral node from /elections znode to
      * decide the new leader in case the previous leader is dead.
      */
-    public void electLeader() throws Exception{
+    public void electLeader() throws Exception {
         List<String> children = zk.getChildren("/elections", false);
         Collections.sort(children);
         String smallestChild = "/elections/"+children.get(0);
@@ -164,7 +164,7 @@ public class ZNodeController implements Watcher {
      * Make the new elected leader to watch the other monitors as
      * long as this is the job of the leader.
      */
-    public void acquireLeadershipRights(String znodeParentDir) throws Exception{
+    public void acquireLeadershipRights(String znodeParentDir) throws Exception {
         List<String> children = zk.getChildren(znodeParentDir, this);
         // Watch each child node
         for (String child : children) {
@@ -245,7 +245,7 @@ public class ZNodeController implements Watcher {
      * retrieving it from /monitors/$znodename$
      * @return a JsonObject object containing the information of the node
      */
-    public JsonObject getMonitorData(String znode) throws Exception{
+    public JsonObject getMonitorData(String znode) throws Exception {
         String nodeInfo = new String(zk.getData("/monitors/"+znode, null, null));
         JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
         return jsonObj;
@@ -257,7 +257,7 @@ public class ZNodeController implements Watcher {
      * retrieving it from /jobs/$znodename$
      * @return a JsonObject object containing the information of the node
      */
-    public JsonObject getJobData(String znode) throws Exception{
+    public JsonObject getJobData(String znode) throws Exception {
         String nodeInfo = new String(zk.getData("/jobs/"+znode, null, null));
         JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
         return jsonObj;
@@ -281,7 +281,7 @@ public class ZNodeController implements Watcher {
      * @return The name of the monitor currently in /monitors/leader
      * @throws Exception
      */
-    public String getLeaderName() throws Exception{
+    public String getLeaderName() throws Exception {
         String fatherName = new String(zk.getData("/monitors/leader", null, null));
         return fatherName;
     }
