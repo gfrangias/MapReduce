@@ -26,8 +26,8 @@ header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
   $username = $_SESSION['username'];
-  $mapreduceDir = "uploads/{$username}/mapreduce";
-  $datasetDir = "uploads/{$username}/mareduce";
+  $mapreduceDir = "uploads/{$username}/executables";
+  $datasetDir = "uploads/{$username}/datasets";
 
   echo json_encode([
     'mapreduceFiles' => listFiles($mapreduceDir),

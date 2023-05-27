@@ -22,8 +22,8 @@ header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $username = $_SESSION['username'];
-  $mapreduceDir = "uploads/{$username}/mapreduce";
-  $datasetDir = "uploads/{$username}/mareduce";
+  $mapreduceDir = "uploads/{$username}/executables";
+  $datasetDir = "uploads/{$username}/datasets";
 
   if (!file_exists($mapreduceDir)) {
     mkdir($mapreduceDir, 0777, true);

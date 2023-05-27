@@ -17,9 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $fileName = $data['fileName'];
 
   if ($fileType === 'mapreduce-table') {
-    $dir = "uploads/{$username}/mapreduce";
+    $dir = "uploads/{$username}/executables";
   } elseif ($fileType === 'dataset-table') {
-    $dir = "uploads/{$username}/mareduce";
+    $dir = "uploads/{$username}/datasets";
   } else {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid fileType']);
