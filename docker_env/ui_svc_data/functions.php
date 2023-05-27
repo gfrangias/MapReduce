@@ -36,14 +36,11 @@
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $response = curl_exec($ch);
+        
         curl_close($ch);
 
-        if(curl_errno($ch)) {
-            $error_msg = curl_error($ch);
-        }
-        
-        curl_close($ch);
-        
+     
+                
         $token = json_decode($response);
         
         if(!$token || !isset($token->access_token) || !isset($token->refresh_token)) {
