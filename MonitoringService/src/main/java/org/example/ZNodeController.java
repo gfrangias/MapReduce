@@ -169,7 +169,7 @@ public class ZNodeController implements Watcher {
         // Watch each child node
         for (String child : children) {
             //Don't want to monitor leader (it's me) and eventually a zombie znode named fathermonitor
-            if (child.equals("leader") || child.equals("fathermonitor")) {
+            if (child.equals("leader") || child.equals("fathermonitor") || child.equals(this.monitorName)) {
                 continue; // Skip watching this child
             }
             String childPath = znodeParentDir + "/" + child;
