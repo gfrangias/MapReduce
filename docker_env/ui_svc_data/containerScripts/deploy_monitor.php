@@ -1,5 +1,11 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+//Deploys monitor container in host docker engine using DOCKER HTTP API
+//Important!: Docker HTTP API needs to be enabled on host 
+function deployMonitor(){
     $imageName = 'docker_env_fathermonitor';
    
     $networkConfig = [
@@ -64,7 +70,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     curl_close($ch);
+    //Return the name of the newly created monitor
+    return $containerName;
+}
+
+
+//Accept POST requests for deploying monitors
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    deployMonitor();
 } else {
-    echo "Invalid request";
+    echo "Method not allowed";
 }
 ?>
