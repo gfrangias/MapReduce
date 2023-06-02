@@ -24,6 +24,9 @@ public class Main {
          * second section.
          */
         String containerName = System.getenv("CONTAINER_NAME");
+        if(System.getenv("JOB_ID")!=null){
+
+        }
         //String containerName = "mjimy";
         String ipAddress = null;
 
@@ -94,6 +97,7 @@ public class Main {
             ZooKeeper zk = new ZooKeeper(zkAddress, 20000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
+            //JobController jController = new JobController();
 
             //Register self into Zookeeper as monitor or fathermonitor (decided upon container name)
             zController.registerMe(containerName, ipAddress);
@@ -129,7 +133,8 @@ public class Main {
             //Handle Job with id = id
             app.post("/api/job/assign/{id}", ctx -> {
                 if(!zController.iAmOccupied(containerName)){
-                    System.out.println("Will handle job...");
+                    System.out.println("Will handle job with id:"+ctx.pathParam("id"));
+                    zController.makeMeOccupied(containerName);
                     ctx.status(200);
                 }else{
                     ctx.status(503); //Unavailable if already committed to job

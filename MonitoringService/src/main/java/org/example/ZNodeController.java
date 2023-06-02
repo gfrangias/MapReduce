@@ -96,18 +96,36 @@ public class ZNodeController implements Watcher {
         }
     }
 
-
     public void makeMeAvailable(String znodeName) throws Exception {
-
+        try {
+            JsonObject currData = getMonitorData("/monitors/" + znodeName);
+            String monIp = currData.getString("ipAddress");
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":0}";
+            zk.setData("/monitors/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
-    public void makeMeOccupied(String znodeName) throws Exception {
-
+    public void makeMeOccupied(String znodeName) {
+        try {
+            JsonObject currData = getMonitorData("/monitors/" + znodeName);
+            String monIp = currData.getString("ipAddress");
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":1}";
+            zk.setData("/monitors/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
-    public boolean iAmOccupied(String znodeName) throws Exception {
-        boolean status = getMonitorData(znodeName).getBoolean("occupied");
-        return status;
+    public boolean iAmOccupied(String znodeName) {
+        try {
+            boolean status = getMonitorData(znodeName).getBoolean("occupied");
+            return status;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return true;
     }
 
     /**

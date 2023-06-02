@@ -13,7 +13,7 @@ public class JobController {
     }
 
     /**
-     * This method is called via the web server API endpoint /api/job/assing/$id.
+     * This method is called via the web server API endpoint /api/job/assign/$id.
      * It starts the process of job handling. First it calculates the number of workers
      * needed for the job. Based on the type of the job the appropriate steps are calculated
      * @param jobNodeId

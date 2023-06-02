@@ -1,21 +1,20 @@
-package model;
+package org.example;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-
 public class Distributor {
 	
-	public Distributor(File file, int chunkSize, int id) {
+	public Distributor(File file, long chunkSize, long id) {
 		this.inputFile = file;
 		CHUNK_SIZE = chunkSize;
 		ID = id;
 	}
 	
 	public final File inputFile;
-	public final int CHUNK_SIZE;
-	public final int ID;
+	public final long CHUNK_SIZE;
+	public final long ID;
 	
 	public boolean create_chunk_file() throws IOException {
 		
@@ -53,5 +52,4 @@ public class Distributor {
 		
 		System.out.println(status);
 	}
-
 }
