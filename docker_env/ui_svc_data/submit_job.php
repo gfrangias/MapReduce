@@ -1,4 +1,7 @@
 <?php
+include 'zk.php';
+include 'containerScripts/deploy_monitor.php';
+
 if (session_status() == PHP_SESSION_NONE) {
   session_start();
 }
@@ -11,7 +14,8 @@ if (session_status() == PHP_SESSION_NONE) {
  $datasetDir = './uploads/'.$username.'/datasets';
 
 
-function createJob($username, $zk) {
+ //It creates the znode for the job in ZK
+function createJob($username, $zk, $postFields) {
 
     $acl = array(array("perms" => Zookeeper::PERM_ALL, "scheme" => "world", "id" => "anyone"));
 
@@ -25,16 +29,20 @@ function createJob($username, $zk) {
         $jobInfo = json_encode([
             'jobid' => $jobId,
             'user' => $username,
-            'title' => 'Word Count Example',
+            'title' => $postFields['jobTitle'],
             'creation_date' => date('Y-m-d H:i:s'),
-            'dataset_file' => 'dataset.txt',
-            'executable_file' => 'executable.sh',
+            'dataset_file' => $postFields['dataset'],
+            'executable_file' => $postFields['execFile'],
             'status' => 'queued',
-            'result_path' => '/jobs/' . $username . '/result/' . $jobId . '.txt'
+            'map_method' => $postFields['mapMethod'],
+            'reduce_method' => $postFields['reduceMethod'],
+            'shuffle_method' => $postFields['shuffleMethod'],
+            'merge_method' => $postFields['mergeMethod']
         ]);                                                                                                                                                                                                                                                                                                                                                                                                 
     
         // Create the job znode in ZooKeeper
         $zk->create($jobPath . $jobId, $jobInfo,  $acl);
+        return $jobId;
     }else{
         // Create the users jobs node
         try {
@@ -47,6 +55,71 @@ function createJob($username, $zk) {
   
 }
 
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  
+  $currMonitors = $zk->getChildren('/monitors');
+  $numOfMonitorsCurrent = count($currMonitors);
+  $newJobId = createJob($username, $zk, $_POST);
+  $successfulAssignment = false;
+
+  foreach($currMonitors as $item){
+    //Dont want to include the non-functional /monitors/leader node
+    if($item == 'leader'){
+      continue;
+    }
+
+    $monitorInfo = $zk->get('/monitors/'.$item);
+    $arrayMonitorInfo = json_decode($monitorInfo,1);
+
+    //If the monitor of the iteration is occupied no need to bother
+    if($arrayMonitorInfo['occupied']){
+      continue;
+    }else{
+      //Assign job to the monitor 
+      //Tell him to handle the job via his API
+      
+      // Create a new cURL resource
+      $curl = curl_init();
+
+      // Set the cURL options
+      curl_setopt($curl, CURLOPT_URL, $arrayMonitorInfo['ipAddress'] . ":7000/api/job/assign/" . $newJobId);
+      curl_setopt($curl, CURLOPT_POST, true);
+      // Add any additional options if needed, such as headers or data
+
+      // Execute the cURL request
+      $response = curl_exec($curl);
+
+      if(curl_getinfo($curl, CURLINFO_HTTP_CODE)==503){
+        // The monitor was taken by another service during this request
+        // I need to try to assign the job elsewhere
+        // Close the cURL resource
+        curl_close($curl);
+        continue;
+      }
+
+      // If we reach this point, the job is assigned to monitor
+      $successfulAssignment = true;
+      break;
+
+      // Close the cURL resource
+      curl_close($curl);
+    }
+  }
+
+  //If the iteration over the monitors available in /monitors didnt succeed at assigning the job, then 
+  //we need to deploy new monitor
+  if(!$successfulAssignment){
+    $newContainerName = deployMonitor();
+    try{
+        $zk->get("/monitors/".$newContainerName);
+        $newMonitorInfo();
+    }catch(Exception $e){
+      
+    }
+  }
+
+}
 ?>
 
 <!DOCTYPE html>
@@ -72,22 +145,7 @@ function createJob($username, $zk) {
 <body>
 
 <?php
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Process the submitted data here (e.g., save to a database, perform operations, etc.)
 
-    // Display a success message
-    echo '<div class="container">';
-    echo '<h2>Job Submission Successful</h2>';
-    echo '<p>Job Title: ' . $_POST['jobTitle'] . '</p>';
-    echo '<p>Distributor Method: ' . $_POST['distributorMethod'] . '</p>';
-    echo '<p>Map Method: ' . $_POST['mapMethod'] . '</p>';
-    echo '<p>Reduce Method: ' . $_POST['reduceMethod'] . '</p>';
-    echo '<p>Shuffle Method: ' . $_POST['shuffleMethod'] . '</p>';
-    echo '<p>Merge Method: ' . $_POST['mergeMethod'] . '</p>';
-    echo '<p>Executable file: ' . $_POST['execFile'] . '</p>';
-    echo '<p>Dataset file: ' . $_POST['dataset'] . '</p>';
-    echo '</div>';
-  }
 ?>
 
 <div class="container">
@@ -96,13 +154,13 @@ function createJob($username, $zk) {
     <div class="form-group row">
       <label for="jobTitle" class="col-sm-4 col-form-label">Job Title:</label>
       <div class="col-sm-8">
-        <input type="text" class="form-control" id="jobTitle" name="jobTitle">
+        <input type="text" class="form-control" id="jobTitle" name="jobTitle" required>
       </div>
     </div>
     <div class="form-group row">
       <label for="execFile" class="col-sm-4 col-form-label">Executable file (.jar):</label>
       <div class="col-sm-8">
-        <select class="form-control" id="execFile" name="execFile">
+        <select class="form-control" id="execFile" name="execFile" required>
           <option value="" disabled selected>Select an executable file</option>
           <?php
             // Get the list of files in the executable directory
@@ -121,7 +179,7 @@ function createJob($username, $zk) {
     <div class="form-group row">
       <label for="dataset" class="col-sm-4 col-form-label">Dataset file:</label>
       <div class="col-sm-8">
-        <select class="form-control" id="dataset" name="dataset">
+        <select class="form-control" id="dataset" name="dataset" required>
           <option disabled selected>Select a dataset file</option>
           <?php
             // Get the list of files in the dataset directory
@@ -140,25 +198,36 @@ function createJob($username, $zk) {
     <div class="form-group row">
       <label for="distributorMethod" class="col-sm-4 col-form-label">Distributor Method:</label>
       <div class="col-sm-8">
-        <input type="text" class="form-control" id="distributorMethod" name="distributorMethod">
+        <input type="text" class="form-control" id="distributorMethod" name="distributorMethod" required>
       </div>
     </div>
     <div class="form-group row">
       <label for="mapMethod" class="col-sm-4 col-form-label">Map Method:</label>
       <div class="col-sm-8">
-        <input type="text" class="form-control" id="mapMethod" name="mapMethod">
+        <input type="text" class="form-control" id="mapMethod" name="mapMethod" required>
       </div>
     </div>
     <div class="form-group row">
       <label for="reduceMethod" class="col-sm-4 col-form-label">Reduce Method:</label>
       <div class="col-sm-8">
-        <input type="text" class="form-control" id="reduceMethod" name="reduceMethod">
+        <input type="text" class="form-control" id="reduceMethod" name="reduceMethod" required>
       </div>
     </div>
     <div class="form-group row">
+        <label for="reducersNum" class="col-sm-4 col-form-label">Number of Reducers: </label>
+        <div class="col-sm-1">
+          <select class="form-control" name="reducersNum" required>
+            <!-- Use a loop to generate the options -->
+            <?php for ($i = 1; $i <= 20; $i++) { ?>
+              <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
+            <?php } ?>
+          </select>
+            </div>
+      </div>
+    <div class="form-group row">
       <label for="mergeMethod" class="col-sm-4 col-form-label">Merge Method:</label>
       <div class="col-sm-8">
-        <input type="text" class="form-control" id="mergeMethod" name="mergeMethod">
+        <input type="text" class="form-control" id="mergeMethod" name="mergeMethod" required>
       </div>
     </div>
     <div class="col-sm-6">
