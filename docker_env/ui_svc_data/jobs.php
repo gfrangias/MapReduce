@@ -1,6 +1,7 @@
 <?php
 
 include 'functions.php';
+include 'zk.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -12,19 +13,6 @@ if(!isset($_SESSION['username'])){
 
 // Get the username from the session
 $username = $_SESSION['username'];
-
-// Array of ZooKeeper addresses
-$zookeeperAddresses = [
-    '172.16.0.11:2181',
-    '172.16.0.12:2181',
-    '172.16.0.13:2181'
-];
-
-// Select a random ZooKeeper address
-$randomAddress = $zookeeperAddresses[array_rand($zookeeperAddresses)];
-
-// Connect to ZooKeeper
-$zk = new Zookeeper($randomAddress);
 
 // Function to retrieve jobs for the user from ZooKeeper
 function getJobs($username, $zk)
