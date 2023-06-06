@@ -254,6 +254,22 @@ $jobs = getJobs($username, $zk);
             border-radius: 50%;
             margin-right: 5px;
         }
+        .pink-bullet {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #bd7cbf;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .orange-bullet {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #de7f12;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
 </style>    
 <body>
     
@@ -322,10 +338,14 @@ $jobs = getJobs($username, $zk);
                                 echo $job['status'] ." <span class='blue-bullet'></span>";
                             } elseif (strpos($job['status'], 'queued') !== false){
                                 echo $job['status'] ." <span class='yellow-bullet'></span>";
-                            } elseif (strpos($job['status'], 'exited') !== false){
+                            } elseif (strpos($job['status'], 'completed') !== false){
                                 echo $job['status'] ." <span class='green-bullet'></span>";
-                            } elseif (strpos($job['status'], 'error') !== false){
+                            } elseif (strpos($job['status'], 'failed') !== false){
                                 echo $job['status'] ." <span class='red-bullet'></span>";
+                            } elseif (strpos($job['status'], 'resourcing') !== false){
+                                echo $job['status'] ." <span class='orange-bullet'></span>";
+                            } elseif (strpos($job['status'], 'planning') !== false){
+                                echo $job['status'] ." <span class='pink-bullet'></span>";
                             }else {
                                 echo $job['status'] . "</p>";
                             }
