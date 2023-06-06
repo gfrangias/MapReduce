@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $curl = curl_init();
 
       // Set the cURL options
-      curl_setopt($curl, CURLOPT_URL, $arrayMonitorInfo['ipAddress'] . ":7000/api/job/assign/" . $newJobId);
+      curl_setopt($curl, CURLOPT_URL, $arrayMonitorInfo['ipAddress'] . ":7000/api/job/assign/".$_SESSION['username'].'/' . $newJobId);
       curl_setopt($curl, CURLOPT_POST, true);
       // Add any additional options if needed, such as headers or data
 
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $curl = curl_init();
 
     // Set the cURL options
-    $url = $newMonitorInfo['ipAddress'] . ":7000/api/job/assign/" . $newJobId;
+    $url = $newMonitorInfo['ipAddress'] . ":7000/api/job/assign/".$_SESSION['username'].'/'. $newJobId;
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_POST, true);
     // Add any additional options if needed, such as headers or data
