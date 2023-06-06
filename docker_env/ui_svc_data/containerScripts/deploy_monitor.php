@@ -8,14 +8,15 @@ if (session_status() == PHP_SESSION_NONE) {
 function deployMonitor(){
     $imageName = 'docker_env_fathermonitor';
    
-    $networkConfig = [
-        "NetworkMode" => "map_reduce_net"
+    $hostConfig = [
+        "NetworkMode" => "map_reduce_net",
+        "Binds" => ['/home/user/mp/MapReduce/docker_env/filedb/uploads:/app/uploads']    
     ];
     $containerName = 'm'.uniqid();
     
     $postData = json_encode([
         'Image' => $imageName,
-        'HostConfig' => $networkConfig,
+        'HostConfig' => $hostConfig,
         'Env' => ['CONTAINER_NAME='.$containerName],
     ]);
     $url = "http://172.17.0.1:2375/containers/create";
