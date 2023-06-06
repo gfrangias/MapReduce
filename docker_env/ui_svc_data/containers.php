@@ -4,7 +4,7 @@
       session_start();
   }
   if ($_SESSION['username']!='admin'){
-    header('Location: error.php?s=2');
+    //header('Location: error.php?s=2');
   }
   verifyToken();
 ?>
@@ -321,7 +321,7 @@
                 <h1 class="mb-4 table-title"><strong>Container Management</strong></h1>
                 <div class="table-toolbar mb-4 d-flex justify-content-end">
                     <button class='btn btn-success btn-sm mr-1 btn-act' onclick='createWorker()'>Deploy New Worker</button>
-                    <button class='btn btn-success btn-sm mr-1 btn-act' onclick='createMonitor()'>Deploy New Monitor</button>
+                    <button class='btn btn-success btn-sm mr-1 btn-act' onclick='createMonitor(true)'>Deploy New Monitor</button>
                 </div>        
 
 
@@ -385,7 +385,7 @@
             postRequest('containerScripts/deploy_worker.php', {imageName: image_name});
         }
         function createMonitor(image_name) {
-            postRequest('containerScripts/deploy_monitor.php', {imageName: image_name});
+            postRequest('containerScripts/deploy_monitor.php', {manualStart: true});
         }
         function deleteContainer(container_id) {
             postRequest('containerScripts/delete_container.php', {container_id: container_id});
