@@ -50,7 +50,7 @@ function createJob($username, $zk, $postFields) {
         } catch (Exception $e) {}        
         $zk->create('/jobs/'.$username, null,  $acl);
 
-        createJob($username, $zk);
+        createJob($username, $zk, $postFields);
     }   
   
 }
@@ -111,14 +111,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   //we need to deploy new monitor
   if(!$successfulAssignment){
     $newContainerName = deployMonitor();
-    try{
-        $zk->get("/monitors/".$newContainerName);
-        $newMonitorInfo();
-    }catch(Exception $e){
+    sleep(10);  
+    $newMonitorInfo = $zk->get("/monitors/".$newContainerName);    
+    $newMonitorInfo = json_decode($newMonitorInfo,1);
       
-    }
-  }
+    // Create a new cURL resource
+    $curl = curl_init();
 
+    // Set the cURL options
+    $url = $newMonitorInfo['ipAddress'] . ":7000/api/job/assign/" . $newJobId;
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_POST, true);
+    // Add any additional options if needed, such as headers or data
+
+    // Execute the cURL request
+    $response = curl_exec($curl);
+    echo curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+    if(curl_getinfo($curl, CURLINFO_HTTP_CODE)==503){
+      // The monitor was taken by another service during this request
+      // I need to try to assign the job elsewhere
+      // Close the cURL resource
+      curl_close($curl);
+      echo 'Failure';
+      return;
+    }
+
+    // If we reach this point, the job is assigned to monitor
+    $successfulAssignment = true;
+    if($successfulAssignment){
+      echo 'Success';
+    }
+    // Close the cURL resource
+    curl_close($curl);
+  }
 }
 ?>
 
@@ -128,8 +154,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>MapReduce UI - Job Submission</title>
   <!-- Include Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <link rel="icon" type="image/x-icon" href="assets/brand/ico.png">
   <style>
+    .loader {
+      border: 8px solid #f3f3f3; /* Light grey */
+      border-top: 8px solid #033894; /* Blue */
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 3s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     .container {
       background-color: #f8f9fa;
       border-radius: 10px;
@@ -139,6 +179,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .btn-container {
       display: flex;
       justify-content: flex-end;
+    }
+    .btn-primary{
+      background-color: #033894;
+      border: 1px solid #033894
     }
   </style>
 </head>
@@ -150,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <div class="container">
 <h1 class="mb-4 table-title"><strong>Job Submission</strong></h1>
-  <form method="post" action="" enctype="multipart/form-data">
+  <form method="post" action="" enctype="multipart/form-data" id="job-form">
     <div class="form-group row">
       <label for="jobTitle" class="col-sm-4 col-form-label">Job Title:</label>
       <div class="col-sm-8">
@@ -216,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="form-group row">
         <label for="reducersNum" class="col-sm-4 col-form-label">Number of Reducers: </label>
         <div class="col-sm-1">
-          <select class="form-control" name="reducersNum" required>
+          <select class="form-control" name="reducersNum" id="reducersNum" required>
             <!-- Use a loop to generate the options -->
             <?php for ($i = 1; $i <= 20; $i++) { ?>
               <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
@@ -233,8 +277,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="col-sm-6">
         <button type="submit" class="btn btn-primary">Submit</button>
         <a href="jobs.php" class="btn btn-secondary">Back to Jobs</a>
+        <div class="col-sm-20">
+        
+        </div>
       </div>
-  </form>
+
+
+      <div class="container" style="display:none" id="alert-job">
+            <div class="row alert alert-secondary">
+              <div class="col-xs-6">
+                <div class="loader col-sm-14"></div>
+              </div>
+              <div  class="pl-3 col-xs-6 d-flex align-items-center">
+                  <di>Allow some time for the job to set up. Sit tight please</div>
+              </div>
+            </div>
+    </div>
+</div>
+            </form>
+
+<script>
+    function startTimer() {
+      var loadingDiv = document.getElementById('alert-job');
+
+      loadingDiv.style.display = 'block'; // Show the loading div
+
+      setTimeout(function() {
+          loadingDiv.style.display = 'none'; // Hide the loading div after 6 seconds
+      }, 10000);
+    }
+
+    function isFormValid() {
+        var nameInput = document.getElementById("jobTitle");
+        var execInput = document.getElementById("execFile");
+        var dataInput = document.getElementById("dataset");
+        var distrInput = document.getElementById("distributorMethod");
+        var mapInput = document.getElementById("mapMethod");
+        var reducInput = document.getElementById("reducersNum");
+        var reduceMethodInput = document.getElementById("reduceMethod");
+        var mergInput = document.getElementById("mergeMethod");
+
+      
+        var name = nameInput.value.trim();
+        var exec = execInput.value.trim();
+        var data = dataInput.value.trim();
+        var distr = distrInput.value.trim();
+        var map = mapInput.value.trim();
+        var reducNum = reducInput.value.trim();
+        var reduceMethod = reduceMethodInput.value.trim();
+        var mergMethod = mergInput.value.trim();
+
+        // Perform validation based on your requirements
+        if (name === "" || exec === "" || data ==="" || distr ==="" || map ==="" || reducNum=== "" || reduceMethod ==="" || mergMethod ==="") {
+            return false; // Form is not valid
+        }
+        return true; // Form is valid
+    }
+
+    // Function to handle form submission
+    function handleFormSubmit() {
+        if (isFormValid()) {
+            startTimer();
+        }
+    }
+
+    // Get the form element
+    var form = document.getElementById("job-form");
+
+    // Add an event listener for the form's submit event
+    form.addEventListener("submit", handleFormSubmit);
+</script>
 </div>
 
 <!-- Include Bootstrap JS -->

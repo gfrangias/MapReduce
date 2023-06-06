@@ -306,7 +306,6 @@ $jobs = getJobs($username, $zk);
                     <th onclick="sortTable(4)">Executable File <span class="sort-arrow"></span></th>
                     <th onclick="sortTable(5)">Status <span class="sort-arrow"></span></th>
                     <th>Actions</th>
-                    <th onclick="sortTable(6)">Result Path <span class="sort-arrow"></span></th>
                     </tr>
                 </thead>    
                 <tbody>
@@ -339,8 +338,6 @@ $jobs = getJobs($username, $zk);
                                     </button>
                                 </form>
                             </td>
-                            <td><?php echo $job['result_path']; ?></td>
-
                         </tr>
                         <?php endforeach; ?>
                         <?php else : ?>

@@ -60,13 +60,13 @@ function deployMonitor(){
         curl_close($start_ch);
 
         if ($start_http_status >= 200 && $start_http_status < 300) {
-            echo "Container created and started";
+            //echo "Container created and started";
         } else {
-            echo "Error starting container: " . $start_response;
+            //echo "Error starting container: " . $start_response;
         }
 
     } else {
-        echo "Error creating container: " . $response;
+       // echo "Error creating container: " . $response;
     }
 
     curl_close($ch);
@@ -76,9 +76,7 @@ function deployMonitor(){
 
 
 //Accept POST requests for deploying monitors
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['manualStart'])) {
     deployMonitor();
-} else {
-    echo "Method not allowed";
 }
 ?>
