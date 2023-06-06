@@ -97,6 +97,8 @@ public class Main {
             ZooKeeper zk = new ZooKeeper(zkAddress, 20000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
+            DockerController dController = new DockerController();
+            JobController jController = new JobController(dController,zController);
             //JobController jController = new JobController();
 
             //Register self into Zookeeper as monitor or fathermonitor (decided upon container name)
@@ -131,10 +133,11 @@ public class Main {
             });
 
             //Handle Job with id = id
-            app.post("/api/job/assign/{id}", ctx -> {
+            app.post("/api/job/assign/{user}/{id}", ctx -> {
                 if(!zController.iAmOccupied(containerName)){
-                    System.out.println("Will handle job with id:"+ctx.pathParam("id"));
+                    System.out.println("Will handle job with id:"+ctx.pathParam("id") + " for user: "+ctx.pathParam("user"));
                     zController.makeMeOccupied(containerName);
+                    jController.handleJob(ctx.pathParam("id"), ctx.pathParam("user"));
                     ctx.status(200);
                 }else{
                     ctx.status(503); //Unavailable if already committed to job

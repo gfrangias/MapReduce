@@ -1,5 +1,6 @@
 package org.example;
 
+import model.JobStatus;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 import javax.json.*;
@@ -279,6 +280,17 @@ public class ZNodeController implements Watcher {
         String nodeInfo = new String(zk.getData("/jobs/"+znode, null, null));
         JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
         return jsonObj;
+    }
+
+    public void updateJobStatus(String znode, String status){
+        try {
+            JsonObject currData = getJobData(znode);
+            JsonValue v = Json.createValue(status);
+            currData.put("status",v);
+            zk.setData("/jobs/" + znode, Jsonizer.jsonObjectToString(currData).getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
