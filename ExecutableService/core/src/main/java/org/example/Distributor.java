@@ -22,7 +22,7 @@ public class Distributor {
 		
 		stream.seek(CHUNK_SIZE * ID);
 		
-		byte[] data = new byte[CHUNK_SIZE];
+		byte[] data = new byte[(int) CHUNK_SIZE];
 		
 		stream.read(data);
 		stream.close();
