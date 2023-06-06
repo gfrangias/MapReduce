@@ -50,7 +50,9 @@ $zk = new Zookeeper($randomAddress);
 <head>
     <title>MapReduce UI - Job Details</title>
     <link rel="icon" type="image/x-icon" href="assets/brand/ico.png">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.28.3/dist/apexcharts.min.js"></script>
 </head>
 
 <style>
@@ -94,21 +96,38 @@ $zk = new Zookeeper($randomAddress);
             border-radius: 50%;
             margin-right: 5px;
         }
-
-        .green-bullet { background-color: green; }
-        .yellow-bullet { background-color: #ffc107; }
-        .blue-bullet { background-color: #0D6EFD; }
-        .red-bullet { background-color: #DC3545; }
-
         .rounded-container {
             border-bottom-left-radius: 1.25rem;
             border-bottom-right-radius: 1.25rem;
             overflow: hidden; /* This is important if the children don't also have rounded corners */
+            
         }
         .rounded-top {
             background-color: #033894;
         }
-        
+        .pink-bullet {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #bd7cbf;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .orange-bullet {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #de7f12;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .chart-container {
+            height: 100%;
+        }
+        .box{
+            border-bottom-left-radius:  1.25rem;
+            border-bottom-right-radius:  1.25rem;
+        }
 </style>
 <body>
 
@@ -124,7 +143,7 @@ $zk = new Zookeeper($randomAddress);
         <div class="row">
 
             <!-- Left Container: Job Info -->
-            <div class="col-lg-6 rounded-container">
+            <div class="col-lg-4 rounded-container">
                 <div class="rounded-top p-2 text-white">
                     <h5 class="mb-0">Job Info</h5>
                 </div>
@@ -142,8 +161,12 @@ $zk = new Zookeeper($randomAddress);
                         echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='yellow-bullet'></span></p>";
                     } elseif (strpos($jobInfo['status'], 'exited') !== false){
                         echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='green-bullet'></span></p>";
-                    } elseif (strpos($jobInfo['status'], 'error') !== false){
+                    } elseif (strpos($jobInfo['status'], 'failed') !== false){
                         echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='red-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'planning') !== false){
+                            echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='pink-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'resourcing') !== false){
+                                echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='orange-bullet'></span></p>";
                     }else {
                         echo "<p>Status: " . $jobInfo['status'] . "</p>";
                     }
@@ -155,20 +178,21 @@ $zk = new Zookeeper($randomAddress);
             </div>
 
             <!-- Right Container: Execution Info -->
-            <div class="col-lg-6 rounded-container">
+            <div class="col-lg-8 rounded-container">
                 <div class="rounded-top p-2 text-white">
                     <h5 class="mb-0">Execution Info</h5>
                 </div>
-                <div class="rounded-container p-4 bg-light">
-                    <?php
-                    // Fetch execution details from jobs.php using GET
-                    // $executionInfo = retrieveExecutionInfo($jobId); // Function to retrieve execution info
-
-                    // Display execution details
-                    // echo "<p>Monitor ID: " . $executionInfo['monitor_id'] . "</p>";
-                    // echo "<p>Number of Workers: " . $executionInfo['num_workers'] . "</p>";
-                    // Add more execution details as needed
-                    ?>
+                <div class="container-fluid h-100  flex-column">
+                    <div class="row flex-grow-1 bg-light box">
+                        <div class="pt-5 col-md-6">
+                            Number of workers deployed: <strong>218</strong>
+                            Total Execution Time: <strong>324.1s</strong>
+                        </div>
+                        <div class="pt-5 col-md-6 pb-4 d-flex flex-column">
+                            <div id="chart" class="chart-container"></div>
+                            <p id="message"></p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -197,6 +221,70 @@ $zk = new Zookeeper($randomAddress);
       </div>
 
     </div> <!-- End of container -->
+
+    <script>
+        var chart; // move this declaration outside of the function
+        function updateChart() {
+            $.ajax({
+                url: 'time_data.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {                
+                if (data.length === 0) {
+                    $("#chart").empty();
+                    $("#message").text("No stats available yet.");
+                } else {
+
+                    if(chart){
+                        chart.destroy();
+                    }
+                    var chartOptions = {
+                        series: data,
+                        chart: {
+                            type: 'pie',
+                            width: '105%',
+                        },
+                        labels: ['Map Time', 'Reduce Time', 'Preprocessing Time','Postprocessing time'],
+                        colors: ['#007BFF', '#8f8f8f', '#343A40','#033894'], // blue, grey, dark grey
+                        dataLabels: {
+                            formatter: function(val, opts) {
+                                return opts.w.config.series[opts.seriesIndex] + " seconds";
+                            },
+                        },
+                        responsive: [{
+                            breakpoint: 500,
+                            options: {
+                                chart: {
+                                    width: 100
+                                },
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }]
+                    };
+
+                    chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+                    chart.render();
+                    $("#message").empty();
+                }
+            },
+                error: function (xhr, status, error) {
+                    console.error(xhr); // Log the XHR object for debugging purposes
+                    console.error(status); // Log the status for debugging purposes
+                    console.error(error); // Log the error for debugging purposes
+                    
+                    $("#chart").empty();
+                    $("#message").text("Error occurred while retrieving data.");
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            updateChart();
+            setInterval(updateChart, 8000);
+        });
+    </script>
 
 </body>
 </html>
