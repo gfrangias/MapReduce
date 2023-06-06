@@ -74,12 +74,12 @@ public class ZNodeController implements Watcher {
 
             //Register it also as a plain monitor. Leader though is not considered to handle jobs
             //so set occupied to 1 forever.
-            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":1}";
+            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":true}";
             registerEphemeralZnode("/monitors/"+znodeName, data);
 
         }else{
             //Register plain monitor
-            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":0}";
+            data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":false}";
             registerEphemeralZnode("/monitors/"+znodeName, data);
 
             //Should create my node for possible elections in the future
@@ -98,9 +98,9 @@ public class ZNodeController implements Watcher {
 
     public void makeMeAvailable(String znodeName) throws Exception {
         try {
-            JsonObject currData = getMonitorData("/monitors/" + znodeName);
+            JsonObject currData = getMonitorData(znodeName);
             String monIp = currData.getString("ipAddress");
-            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":0}";
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":false}";
             zk.setData("/monitors/" + znodeName, newData.getBytes(), -1);
         }catch(Exception e){
             e.printStackTrace();
@@ -109,9 +109,9 @@ public class ZNodeController implements Watcher {
 
     public void makeMeOccupied(String znodeName) {
         try {
-            JsonObject currData = getMonitorData("/monitors/" + znodeName);
+            JsonObject currData = getMonitorData(znodeName);
             String monIp = currData.getString("ipAddress");
-            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":1}";
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":true}";
             zk.setData("/monitors/" + znodeName, newData.getBytes(), -1);
         }catch(Exception e){
             e.printStackTrace();

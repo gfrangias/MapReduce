@@ -10,18 +10,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../ExecutableService/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ExecutableService/.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ExecutableService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ExecutableService/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ExecutableService/src/model/Distributor.java" beforeDir="false" afterPath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ExecutableService/src/model/text.text" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DockerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DockerController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/jobs.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/jobs.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/submit_job.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/submit_job.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -136,6 +126,7 @@
       <workItem from="1685271476934" duration="1429000" />
       <workItem from="1685549163394" duration="27000" />
       <workItem from="1685628149167" duration="7309000" />
+      <workItem from="1686065317457" duration="4125000" />
     </task>
     <servers />
   </component>
