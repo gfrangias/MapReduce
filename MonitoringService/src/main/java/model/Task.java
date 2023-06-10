@@ -10,17 +10,13 @@ public class Task {
 
     protected TaskType taskType;
 
-    public Task(String id, String cmd, String znodePath, TaskType type){
+    public Task(String id, String worker, String cmd, String znodePath, TaskType type){
         this.taskId = id;
+        this.onWorker = worker;
         this.znodePath = znodePath;
         this.command = cmd;
         this.status = TaskStatus.QUEUED;
         this.taskType = type;
-    }
-
-    public Task(String id){
-        this.taskId = id;
-        this.status = TaskStatus.QUEUED;
     }
 
     public void setTaskRunning(){ this.status = TaskStatus.RUNNING; }

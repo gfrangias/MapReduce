@@ -7,8 +7,8 @@ public class ChunkTask extends Task{
     private long offSetAtFile;
     private String datasetPath;
     private long chunkSize;
-    public ChunkTask(String id, String dp, int noc, long offs, long csz){
-        super(id);
+    public ChunkTask(String id, String onWorker, String cmd, String znodePath, TaskType type, String dp, int noc, long offs, long csz){
+        super(id, onWorker, cmd, znodePath, type);
         this.numOfChunks = noc;
         this.datasetPath = dp;
         this.offSetAtFile = offs;
@@ -35,7 +35,10 @@ public class ChunkTask extends Task{
         return "{"+
                 "\"onworker\":\""+super.onWorker+"\","+
                 "\"command\":\"chunk\","+
-                "\st"
-                "}";
+                "\"status\":\""+super.status+"\","+
+                "\"dataset\":\""+this.datasetPath+"\","+
+                "\"offset\":"+this.offSetAtFile+","+
+                "\"numOfChunks\":"+this.numOfChunks+","+
+                "\"chunkSize\":"+this.chunkSize+"}";
     }
 }

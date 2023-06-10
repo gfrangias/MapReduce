@@ -12,6 +12,7 @@
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" beforeDir="false" afterPath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/ChunkTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/ChunkTask.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/Job.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Job.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/Task.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Task.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/TaskType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/TaskType.java" afterDir="false" />
@@ -167,7 +168,7 @@
       <workItem from="1685628149167" duration="7309000" />
       <workItem from="1686065317457" duration="15463000" />
       <workItem from="1686316746990" duration="16547000" />
-      <workItem from="1686402072776" duration="9111000" />
+      <workItem from="1686402072776" duration="9876000" />
     </task>
     <servers />
   </component>
