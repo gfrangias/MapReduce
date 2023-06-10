@@ -10,15 +10,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/model/TaskStatus.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" beforeDir="false" afterPath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DockerController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/DockerController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/Job.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Job.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/Task.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Task.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/TaskType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/TaskType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DockerController.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/monitor.jar" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/monitor.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/fetch_containerlog.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/fetch_containerlog.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,32 +44,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "Z:/mp/MapReduce/ExecutableService",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "onboarding.tips.debug.path": "Y:/MP/MapReduce/MonitoringService/src/main/java/org/example/Main.java",
-    "project.structure.last.edited": "Artifacts",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "configurable.group.editor",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;Z:/mp/MapReduce/ExecutableService&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;Y:/MP/MapReduce/MonitoringService/src/main/java/org/example/Main.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Artifacts&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.editor&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunAnythingCache">
     <option name="myCommands">
       <command value="mvn clean install" />
     </option>
   </component>
-  <component name="RunManager" selected="Application.FileGenerator">
+  <component name="RunManager" selected="Application.JobController">
     <configuration name="FileGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="model.FileGenerator" />
       <module name="MonitoringService" />
@@ -128,8 +131,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.FileGenerator" />
         <item itemvalue="Application.JobController" />
+        <item itemvalue="Application.FileGenerator" />
         <item itemvalue="Application.RuntimeDemo" />
         <item itemvalue="Application.Main" />
         <item itemvalue="Application.Jsonizer (1)" />
@@ -162,7 +165,9 @@
       <workItem from="1685271476934" duration="1429000" />
       <workItem from="1685549163394" duration="27000" />
       <workItem from="1685628149167" duration="7309000" />
-      <workItem from="1686065317457" duration="14847000" />
+      <workItem from="1686065317457" duration="15463000" />
+      <workItem from="1686316746990" duration="16547000" />
+      <workItem from="1686402072776" duration="9111000" />
     </task>
     <servers />
   </component>

@@ -3,7 +3,7 @@ package model;
 public enum TaskType {
     CHUNK,
     MAP,
-    REDUCE,
     SHUFFLE,
+    REDUCE,
     MERGE
 }

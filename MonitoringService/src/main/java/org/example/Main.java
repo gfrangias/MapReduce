@@ -97,8 +97,7 @@ public class Main {
             ZooKeeper zk = new ZooKeeper(zkAddress, 20000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
-            DockerController dController = new DockerController();
-            JobController jController = new JobController(dController,zController);
+            JobController jController = new JobController(zController);
             //JobController jController = new JobController();
 
             //Register self into Zookeeper as monitor or fathermonitor (decided upon container name)
