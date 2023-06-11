@@ -139,7 +139,8 @@ public class JobController {
             zController.updateJobStatus(j.getJobZnode(), "chunking");
 
             //Deploy workers and assign chunk tasks
-        } 
+
+        }
         else {
             System.out.println("Input file does not exist. Job Failed. Exiting...");
             System.out.println("Job cannot be executed, marking it as failed...");
