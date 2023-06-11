@@ -1,18 +1,17 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $imageName = 'mysql:5.7';
+    $imageName = 'zooopsworker';
    
     $networkConfig = [
         "NetworkMode" => "map_reduce_net"
     ];
+    $containerName = 'w'.uniqid();
 
-    
     $postData = json_encode([
         'Image' => $imageName,
         'HostConfig' => $networkConfig,
-        'Env' => ['MYSQL_ROOT_PASSWORD=root'],
+        'Env' => ['CONTAINER_NAME='.$containerName,'DEDICATED_TO=none'],
     ]);
-    $containerName = 'w'.uniqid();
     $url = "http://172.17.0.1:2375/containers/create";
 
     $ch = curl_init($url);

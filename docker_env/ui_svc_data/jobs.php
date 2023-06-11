@@ -334,7 +334,9 @@ $jobs = getJobs($username, $zk);
                             <td><?php echo $job['dataset_file']; ?></td>
                             <td><?php echo $job['executable_file']; ?></td>
                             <td><?php
-                              if (strpos($job['status'], 'running') !== false) {
+                            if (strpos($job['status'], 'running') !== false) {
+                                echo $job['status'] ." <span class='blue-bullet'></span>";
+                            } elseif (strpos($job['status'], 'chunking') !== false) {
                                 echo $job['status'] ." <span class='blue-bullet'></span>";
                             } elseif (strpos($job['status'], 'queued') !== false){
                                 echo $job['status'] ." <span class='yellow-bullet'></span>";

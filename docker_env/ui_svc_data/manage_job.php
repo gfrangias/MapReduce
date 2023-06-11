@@ -1,5 +1,6 @@
 <?php
 include 'functions.php';
+$stages = array('init', 'planning', 'chunking', 'mapping', 'reducing', 'final');
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -128,6 +129,56 @@ $zk = new Zookeeper($randomAddress);
             border-bottom-left-radius:  1.25rem;
             border-bottom-right-radius:  1.25rem;
         }
+        .stage {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #ddd;
+            color: black;
+            line-height: 50px;
+            text-align: center;
+            display: inline-block;
+            position: relative;
+            margin-right: 60px;
+        }
+
+        .stage.past {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .stage.current {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .stage:hover {
+            cursor: pointer;
+        }
+
+        .stage:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            right: -60px;
+            top: 25px;
+            height: 1px;
+            width: 60px;
+            background: #ddd;
+        }
+
+        .stage.past:not(:last-child)::after {
+            background: #28a745;
+        }
+
+        .stage.current:not(:last-child)::after,
+        .stage.current ~ .stage:not(:last-child)::after {
+            border: 1px dashed #ddd;
+        }
+
+        .tooltip-inner {
+            border-radius: 5px;
+        }
 </style>
 <body>
 
@@ -149,7 +200,6 @@ $zk = new Zookeeper($randomAddress);
                 </div>
                 <div class="rounded-container p-4 bg-light">
                     <?php
-                    // Fetch job details from jobs.php using GET
                     $jobId = $_GET['id'];
                     $jobInfo = getJobInfo($username, $jobId, $zk); // Function to retrieve job info
 
@@ -172,7 +222,10 @@ $zk = new Zookeeper($randomAddress);
                     }
                      echo "<p>Creation Date: <strong> " . $jobInfo['creation_date'] . "</strong></p>";
                      echo "<p>Executable: <strong> " . $jobInfo['executable_file'] . "</strong></p>";
-                     echo "<p>Dataset: <strong> " . $jobInfo['dataset_file'] . "</strong></p>";                    
+                     echo "<p>Dataset: <strong> " . $jobInfo['dataset_file'] . "</strong></p>";       
+                     echo "<p>Map Function: <strong> " . $jobInfo['map_method'] . "</strong></p>";  
+                     echo "<p>Reduce Function: <strong> " . $jobInfo['reduce_method'] . "</strong></p>";    
+                     echo "<p>Flow stage: <strong> " . $jobInfo['stage'] . "</strong></p>";     
                     ?>
                 </div>
             </div>
@@ -195,9 +248,43 @@ $zk = new Zookeeper($randomAddress);
                     </div>
                 </div>
             </div>
-
+        <div class="container mt-4">
+            <div class="timeline text-center">
+                <?php foreach($stages as $stage): ?>
+                    <div class="stage" id="<?php echo str_replace(' ', '_', $stage); ?>" data-toggle="tooltip" data-placement="bottom" title="">
+                        <p class="my-auto"><?php echo substr($stage, 0, 1); ?></p>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
         </div> <!-- End of row -->
 
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+        <script>
+        $(document).ready(function(){
+            function fetchStage() {
+                $.ajax({
+                    url: 'fetch_stage.php',
+                    type: 'get',
+                    dataType: 'json',
+                    success: function(response) {
+                        $('.stage').removeClass('current past');
+                        $('#'+response.stage.replace(' ', '_')).addClass('current').prevAll().addClass('past');
+                        $.each(response.numOfWorkers, function(stage, num) {
+                            $('#'+stage.replace(' ', '_')).attr('data-original-title', stage + ': Num Of Workers ' + num);
+                        });
+                    },
+                    complete: function() {
+                        setTimeout(fetchStage, 5000);
+                    }
+                });
+            }
+            fetchStage();
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+        </script>
         <!-- Bottom Container: Result -->
         <div class="row mt-4 rounded-container">
             <div class="col-lg-12">

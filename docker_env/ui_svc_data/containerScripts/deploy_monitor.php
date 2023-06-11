@@ -30,6 +30,8 @@ function deployMonitor(){
         'Content-Length: ' . strlen($postData),
     ]);
 
+
+
     $response = curl_exec($ch);
     $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 

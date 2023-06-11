@@ -36,13 +36,27 @@ function createJob($username, $zk, $postFields) {
             'status' => 'queued',
             'map_method' => $postFields['mapMethod'],
             'reduce_method' => $postFields['reduceMethod'],
-            'shuffle_method' => $postFields['shuffleMethod'],
-            'merge_method' => $postFields['mergeMethod']
+            'stage' => "init"
         ]);                                                                                                                                                                                                                                                                                                                                                                                                 
     
         // Create the job znode in ZooKeeper
         $zk->create($jobPath . $jobId, $jobInfo,  $acl);
+
+        // Create the stage znode of the job in ZK
+        $zk->create($jobPath . $jobId. '/stage', 'init', $acl);
+        // Create the tasks znode of the job in ZK
+        $zk->create($jobPath . $jobId. '/tasks', null, $acl);
+
+        // Create the statistics znode of the job in ZK
+        $zk->create($jobPath . $jobId. '/statistics', null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/planstage',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/chunkstage',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/mapstage',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/reducestage',null, $acl);
+
         return $jobId;
+
+
     }else{
         // Create the users jobs node
         try {
@@ -195,6 +209,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container">
 <h1 class="mb-4 table-title"><strong>Job Submission</strong></h1>
   <form method="post" action="" enctype="multipart/form-data" id="job-form">
+    <div class="mb-4 mt-4 font-weight-normal alert alert-dark">
+      <strong>General Information about Job submissions</strong> 
+      <ul>
+        <li>Please provide below the information of the job you want to submit. Please follow this<a target="_blank" rel="noopener noreferrer" href='cdn/job_manual.pdf'> instructions.</a></li>
+        <li>Keep in mind that the job submitter will try its best to handle your job request. If your job status won't change (init: 'queued') for a long period of time please consider archiving the current job and creating a new one. You can archive a job by accessing the settings of a job in the Job Manager.</li>
+        <li>If a job is marked as failed then there was an error inside you executable that caused an exception during the distributed execution of the job.</li>
+        <li>You can manage any submitted job from the Job Manager via its settings.</li>
+        <li>The main computational resources needed for the execution are calculated automatically using a dedicated algorithm. You have the option to set the number of the reducers to be used.
+      </ul>
+    </div>
     <div class="form-group row">
       <label for="jobTitle" class="col-sm-4 col-form-label">Job Title:</label>
       <div class="col-sm-8">
@@ -202,16 +226,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="form-group row">
-      <label for="execFile" class="col-sm-4 col-form-label">Executable file (.jar):</label>
+      <label for="execFile" class="col-sm-4 col-form-label">Executable python file (.py)</label>
       <div class="col-sm-8">
         <select class="form-control" id="execFile" name="execFile" required>
-          <option value="" disabled selected>Select an executable file</option>
+          <option value="" disabled selected>Select an executable file from your uploads</option>
           <?php
             // Get the list of files in the executable directory
             $executableFiles = scandir($executableDir);
             foreach ($executableFiles as $file) {
               $filename = basename($file);
-              if($filename == '.' || $filename == '..'){
+              if($filename == '.' || $filename == '..' || trim(pathinfo($filename, PATHINFO_EXTENSION)) != 'py'){
                 continue;
               }
               echo '<option value="'.$file.'">'.$filename.'</option>';
@@ -221,16 +245,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="form-group row">
-      <label for="dataset" class="col-sm-4 col-form-label">Dataset file:</label>
+      <label for="dataset" class="col-sm-4 col-form-label">Dataset file (.txt, .json):</label>
       <div class="col-sm-8">
         <select class="form-control" id="dataset" name="dataset" required>
-          <option disabled selected>Select a dataset file</option>
+          <option disabled selected>Select a dataset file from your uploads</option>
           <?php
             // Get the list of files in the dataset directory
             $datasetFiles = scandir($datasetDir);
             foreach ($datasetFiles as $file) {
               $filename = basename($file);
               if($filename == '.' || $filename == '..'){
+                continue;
+              }
+              setlocale(LC_ALL,'en_US.UTF-8');
+              if(trim(pathinfo($filename, PATHINFO_EXTENSION)) <> 'txt' && trim(pathinfo($filename, PATHINFO_EXTENSION)) <> 'json'){
                 continue;
               }
               echo '<option value="'.$filename.'">'.$filename.'</option>';
@@ -240,19 +268,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="form-group row">
-      <label for="distributorMethod" class="col-sm-4 col-form-label">Distributor Method:</label>
-      <div class="col-sm-8">
-        <input type="text" class="form-control" id="distributorMethod" name="distributorMethod" required>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="mapMethod" class="col-sm-4 col-form-label">Map Method:</label>
+      <label for="mapMethod" class="col-sm-4 col-form-label">Map Function:</label>
       <div class="col-sm-8">
         <input type="text" class="form-control" id="mapMethod" name="mapMethod" required>
       </div>
     </div>
     <div class="form-group row">
-      <label for="reduceMethod" class="col-sm-4 col-form-label">Reduce Method:</label>
+      <label for="reduceMethod" class="col-sm-4 col-form-label">Reduce Function:</label>
       <div class="col-sm-8">
         <input type="text" class="form-control" id="reduceMethod" name="reduceMethod" required>
       </div>
@@ -262,18 +284,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="col-sm-1">
           <select class="form-control" name="reducersNum" id="reducersNum" required>
             <!-- Use a loop to generate the options -->
-            <?php for ($i = 1; $i <= 20; $i++) { ?>
+            <?php for ($i = 1; $i <= 16; $i++) { ?>
               <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
             <?php } ?>
           </select>
             </div>
       </div>
-    <div class="form-group row">
-      <label for="mergeMethod" class="col-sm-4 col-form-label">Merge Method:</label>
-      <div class="col-sm-8">
-        <input type="text" class="form-control" id="mergeMethod" name="mergeMethod" required>
-      </div>
-    </div>
     <div class="col-sm-6">
         <button type="submit" class="btn btn-primary">Submit</button>
         <a href="jobs.php" class="btn btn-secondary">Back to Jobs</a>
@@ -281,8 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         </div>
       </div>
-
-
       <div class="container" style="display:none" id="alert-job">
             <div class="row alert alert-secondary">
               <div class="col-xs-6">
@@ -311,24 +325,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         var nameInput = document.getElementById("jobTitle");
         var execInput = document.getElementById("execFile");
         var dataInput = document.getElementById("dataset");
-        var distrInput = document.getElementById("distributorMethod");
         var mapInput = document.getElementById("mapMethod");
         var reducInput = document.getElementById("reducersNum");
         var reduceMethodInput = document.getElementById("reduceMethod");
-        var mergInput = document.getElementById("mergeMethod");
 
-      
         var name = nameInput.value.trim();
         var exec = execInput.value.trim();
         var data = dataInput.value.trim();
-        var distr = distrInput.value.trim();
         var map = mapInput.value.trim();
         var reducNum = reducInput.value.trim();
         var reduceMethod = reduceMethodInput.value.trim();
-        var mergMethod = mergInput.value.trim();
 
         // Perform validation based on your requirements
-        if (name === "" || exec === "" || data ==="" || distr ==="" || map ==="" || reducNum=== "" || reduceMethod ==="" || mergMethod ==="") {
+        if (name === "" || exec === "" || data ==="" || map ==="" || reducNum=== "" || reduceMethod ==="") {
             return false; // Form is not valid
         }
         return true; // Form is valid

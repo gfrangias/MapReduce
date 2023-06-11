@@ -487,9 +487,6 @@
             fetch('containerScripts/fetch_containerlog.php?id=' + id)
             .then(response => response.text())
             .then(logText => {
-                // Remove non-printable characters
-                logText = logText.replace(/[^ -~\s]/g, '');
-
                 // Update the textarea
                 textarea.textContent = logText;
 

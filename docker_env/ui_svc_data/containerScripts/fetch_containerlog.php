@@ -10,6 +10,7 @@ if($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['id'])){
 
     $response = curl_exec($ch);
 
+
     if ($response === false) {
         // Error occurred
         $errorMessage = curl_error($ch);
@@ -18,8 +19,19 @@ if($_SERVER['REQUEST_METHOD'] == "GET" && isset($_GET['id'])){
     }
 
     curl_close($ch);
+    // Split the logs into lines
+    // Detect the encoding and convert to UTF-8 if necessary
 
-    echo $response;
+    
+    $lines = explode("\n", $response);
 
-    return $response;
+    $cleaned_lines = [];
+    
+    foreach ($lines as $line) {
+        // Remove unwanted control characters except newline (\n) and carriage return (\r)
+        $cleaned_line = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $line);
+        
+        // Echo the cleaned line
+        echo $cleaned_line . "\n";
+    }
 }

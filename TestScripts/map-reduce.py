@@ -13,11 +13,13 @@ def map_character_count():
 
     input_string = sys.stdin.read()
 
-    words = input_string.split()
+    size = len(input_string)
 
-    for word in words:
-        for i in range(len(word)):
-            print(word[i], 1)
+    print(size)
+    exit(0)
+
+    for i in range(size):
+        print(input_string[i] + " 1")
 
 def reduce_word_count():
 
