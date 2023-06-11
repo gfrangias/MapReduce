@@ -3,6 +3,8 @@ package org.example;
 import model.ChunkTask;
 import model.Job;
 import model.Task;
+import model.TaskType;
+
 import java.util.UUID;
 
 
@@ -20,9 +22,7 @@ public class JobController {
     private static int MAX_WORKERS_PER_JOB = 30;
     private Job job;
 
-
-    public JobController( ZNodeController zc){
-
+    public JobController(ZNodeController zc){
         this.zController = zc;
     }
 
@@ -100,9 +100,10 @@ public class JobController {
             //Enqueue Chunk tasks
             for ( int w=0; w<nMinChunksPerWorker; w++){
                 String id = "t"+UUID.randomUUID().toString().replace("-","");
-                Task t = new ChunkTask(id, j.getGlobalInputPath(), numOfChunksPerWorker, offsets_for_i.get(w), CHUNK_SIZE);
-                j.enqeueTask(t);
-
+                //String id = acquireWorker();
+                // t = new ChunkTask(id, j.getGlobalInputPath(), numOfChunksPerWorker, offsets_for_i.get(w), CHUNK_SIZE);
+                //j.enqeueTask(t);
+                Task t = new ChunkTask(id, "w4234354215","chunk",id, TaskType.CHUNK, "app/shakespeer.txt", 10, 457345934, CHUNK_SIZE);
             }
 
             //Deploy workers and assign chunk tasks
@@ -114,6 +115,12 @@ public class JobController {
             zController.updateJobStatus(j.getJobZnode(), "failed");
             System.exit(0);
         }
+    }
+
+
+    public String acquireWorker(String jobId) {
+
+        return null;
     }
 }
 
