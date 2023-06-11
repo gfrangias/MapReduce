@@ -80,7 +80,7 @@ public class JobController {
 
             for (int i=0; i<numOfWorkers; i++) {
 
-                long offsetI = i * (fileSize / numOfWorkers);
+                long offsetI = i * (fileSize / numOfWorkers) / CHUNK_SIZE;
                 offsets_for_i.add(offsetI);
                 if (i == numOfWorkers - 1) {
                     BigDecimal fsz = new BigDecimal(fileSize);

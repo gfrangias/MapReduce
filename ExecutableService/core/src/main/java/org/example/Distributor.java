@@ -23,14 +23,14 @@ public class Distributor {
 		for (int i=0; i<numOfChunks;i++){
 			RandomAccessFile stream = new RandomAccessFile(inputFile, "r");
 
-			stream.seek(this.offset+(i*CHUNK_SIZE));
+			stream.seek(((long) this.offset + i) * CHUNK_SIZE);
 
 			byte[] data = new byte[(int) CHUNK_SIZE];
 
 			stream.read(data);
 			stream.close();
 
-			File outputFile = new File("chunked_" + ID + ".intermediate");
+			File outputFile = new File("chunked_" + (offset + i) + ".intermediate");
 			FileOutputStream fos = new FileOutputStream(outputFile);
 
 			fos.write(data);
@@ -40,7 +40,18 @@ public class Distributor {
 		return true;
 	}
 	
-	public static void main(String[] args) throws IOException, IllegalArgumentException {
+	/**
+	 * 
+	 * @param args
+	 * args[0] - The name of the file to chunk...
+	 * args[1] - The chunk size
+	 * args[2] - Offset of the seeker to start
+	 * args[3] - Number of chunks that this distributor will generate.
+	 * java -jar Distributor file_name chunk_size offset number_of_chunks
+	 * @throws IOException
+	 * @throws IllegalArgumentException
+	 */
+	public static void main(String[] args) throws IOException, IllegalArgumentException, NumberFormatException {
 		
 		if (args.length != 4) {
 			throw new IllegalArgumentException("Insufficient Arguments");
@@ -48,8 +59,8 @@ public class Distributor {
 		
 		String fileName = args[0];
 		int chunk_size = Integer.parseInt(args[1]);
-		long offset = Integer.parseInt(args[2]);
-		int numOfCh = Long.parseLong(args[3]);
+		long offset = Long.parseLong(args[2]);
+		int numOfCh = Integer.parseInt(args[3]);
 		
 		Distributor chunk = new Distributor(new File(fileName), chunk_size, offset, numOfCh);
 		
