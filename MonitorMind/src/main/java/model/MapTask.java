@@ -1,7 +1,5 @@
 package model;
 
-import java.util.ArrayList;
-
 public class MapTask extends Task {
 
     private String functionName;
@@ -9,12 +7,15 @@ public class MapTask extends Task {
     private String outputFilePath;
     private int index;
 
-    public MapTask(String id, String cmd, String znodePath, TaskType type, int index, String fname, String in, String out) {
-        super(id, cmd, znodePath, type);
+    public MapTask(String id, String znodePath, TaskType type, int index, String fname, String in, String out) {
+        super(id, "", znodePath, type);
+
         this.functionName = fname;
         this.index = index;
         this.inputFilePath = in;
         this.outputFilePath = in;
+
+        super.command = new String("python3 " + fname + " < " + in + " > " + out + "/map_" + index + ".intermediate");
     }
 
     public String getFunctionName() {

@@ -255,6 +255,12 @@ public class ZNodeController implements Watcher {
         System.out.println("Registered task: "+t.getZnodePath() + " to ZK");
     }
 
+
+    public List<String> getTasksOfJob(String znode) throws Exception {
+        List<String> childrenTasks = zk.getChildren(znode+ "/tasks", null);
+        return childrenTasks;
+    }
+
     public void updateWorkerOfTask(String znodePath, String worker) throws Exception {
         try {
             JsonObject currData = getZnodeData(znodePath);

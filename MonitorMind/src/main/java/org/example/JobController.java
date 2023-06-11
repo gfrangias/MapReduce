@@ -137,8 +137,22 @@ public class JobController {
             }
             System.out.println(j.getTasks());
             zController.updateJobStatus(j.getJobZnode(), "chunking");
+            while(true){
+                int chunkTasksCompleted = 0;
+                for(String s : zController.getTasksOfJob(j.getJobZnode())){
+                    JsonObject data = zController.getZnodeData(j.getJobZnode() + "/" + s);
+                    if(data.getString("command").equals("chunk") && data.getString("status").equals("COMPLETED")) {
+                        chunkTasksCompleted++;
+                    }
+                }
+                //If all chunk tasks completed then stop waiting and proceed to mapping
+                if(chunkTasksCompleted==j.getTasks().size()){
+                    break;
+                }
+                Thread.sleep(500);
+            }
 
-            //Deploy workers and assign chunk tasks
+            System.out.println("Proceeding to Mapping...");
 
         }
         else {
