@@ -10,42 +10,52 @@ import java.util.Scanner;
 
 public class Merger {
 	
-	public static void main(String[] args) throws IOException {
+    /**
+     * 
+     * @param args
+     * args[0] ---> Output File directory & name
+     * args[1...N] ---> Reduced files to merge
+     * 
+     * @throws IOException
+     */
+	public static void main(String[] args) throws IOException, IllegalArgumentException {
+
+        if (args.length < 2) {
+            throw new IllegalArgumentException("Insufficient arguments...");
+        }
+
+        String file_name = args[0];
 		
-		File outputFile = new File("output.json");
-        
+		File outputFile = new File(file_name);
+
 		Map<String, String> result = new HashMap<String, String>();
 
 
-		for (int i=0; i<args.length; i++) {
+		for (int i=1; i<args.length; i++) {
 			String filename = args[i];
 			Scanner stream = new Scanner(new File(filename));
 			
-            // Create a FileWriter object to write the merged content
-
-			stream.next();
-			
-			
             while(true) {
 
-                String key = stream.next();
-                
-                if (key.contentEquals("}")) {
-                	break;
+                String line = null;
+
+                try {
+                    line = stream.nextLine();
+                }
+                catch (Exception e)  {
+                    break;
+                }
+
+                String[] pair = line.split(" ");
+
+                if (pair.length != 2) {
+                    stream.close();
+                    throw new IllegalStateException("Each line should contain a key-value pair");
                 }
                 
-                String value = stream.next();    
-                
-                if(value.charAt(value.length()-1) == ',') {
-                	value = value.substring(0,value.length()-1);
-                }
-                
-                result.put(key, value);					
+                result.put(pair[0], pair[1]);
             }
-            
-            
-            stream.close();
-				
+            stream.close();	
 		}
 		
 		FileWriter writer = new FileWriter(outputFile);
@@ -55,11 +65,10 @@ public class Merger {
         ArrayList<String> keySet = new ArrayList<String>(result.keySet());
         
         for (int i=0; i<keySet.size(); i++) {
-        	writer.write("\t" + keySet.get(i) + " " + result.get(keySet.get(i)) + (i == keySet.size() ? "\n" : ",\n"));
+        	writer.write("\t\"" + keySet.get(i) + "\": " + result.get(keySet.get(i)) + (i == keySet.size() - 1 ? "\n" : ",\n"));
         }
 		
 		writer.write("}\n");
-		
 		writer.close();
 	}
 	
