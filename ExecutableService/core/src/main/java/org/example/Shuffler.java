@@ -31,9 +31,7 @@ public class Shuffler {
 		for (int i=1; i<args.length; i++) {
 			String filename = args[i];
 			Scanner stream = new Scanner(new File(filename));
-			
-			stream.next();
-						
+							
 			String key_object = null;
 			String value_object = null;
 
@@ -76,7 +74,7 @@ public class Shuffler {
 		}
 
 		for (String key : keys) {
-			list.get(key.hashCode() % reducers).add(key);
+			list.get(Math.abs(key.hashCode()) % reducers).add(key);
 		}
 		
 		for (int i=0; i<reducers; i++) {
