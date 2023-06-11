@@ -3,33 +3,129 @@ package org.example;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
-
+import javax.json.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ZNodeController implements Watcher {
 
     private ZooKeeper zk;
+    private String myMonitor;
     public ZNodeController(ZooKeeper zk_arg){
         this.zk = zk_arg;
     }
 
+    @Override
     public void process(WatchedEvent event) {
-        // Handle the event
-        System.out.println("Received event: " + event.getType());
-        if (event.getType() == Event.EventType.NodeChildrenChanged) {
-            // The list of child nodes has changed
-            try {
-                List<String> children = zk.getChildren(event.getPath(), this);
-                System.out.println("Child nodes: " + children);
-            } catch (KeeperException | InterruptedException e) {
-                e.printStackTrace();
-            }
+        if (event.getType() == Event.EventType.NodeDeleted) {
+            String deletedZNodePath = event.getPath();
+            System.out.println("ZNode deleted: " + deletedZNodePath);
+            // Perform further actions based on the deleted znode path
         }
     }
 
+    /**
+     * Registers worker (self) in ZK and asks monitor to which it is dedicated to watch him
+     * @param znodeName
+     * @param myIP
+     * @param myMonitorName
+     * @throws Exception
+     */
+    public void registerMe(String znodeName, String myIP, String myMonitorName) throws Exception {
+        // Store the monitor name locally
+        this.myMonitor = myMonitorName;
+        String data;
 
-    public void registerZnode(String znodeName, String data) throws Exception {
+
+        //Init the /workers node if not exists
+        Stat stat = this.zk.exists("/workers", false);
+        if (stat == null) {
+            System.out.println("Init /workers node because it didnt exist...");
+            registerPersistentZnode("/workers", "");
+        }
+
+        // Register worker in ZK
+        data = "{\"ipAddress\":\""+ myIP +"\",\"taskPath\":\"empty\", \"occupied\":false}";
+        registerEphemeralZnode("/workers/"+znodeName, data);
+        System.out.println("Registered myself in ZK");
+
+        //I should ask my monitor to watch me in case I fail
+        String myMonitorIP = getMyMonitorIP(myMonitorName);
+        String url = "http://"+getMyMonitorIP(myMonitorName)+":7000/api/zk/watchmeasworker/"+znodeName;
+        //Ask the monitor to watch me
+        HttpClient.post(url,null);
+        System.out.println("The monitor who brought me up is watching me now");
+        //And I will watch the monitor
+        watchNode("/monitors/"+myMonitorName);
+        System.out.println("I am gonna watch the monitor who brought me up");
+    }
+
+    public void makeMeAvailable(String znodeName) throws Exception {
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String monIp = currData.getString("ipAddress");
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":false}";
+            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void makeMeOccupied(String znodeName) {
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String monIp = currData.getString("ipAddress");
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":true}";
+            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public boolean iAmOccupied(String znodeName) {
+        try {
+            boolean status = getWorkerData(znodeName).getBoolean("occupied");
+            return status;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    /**
+     * Make this worker a watcher for a specified znode name in ZK
+     * @param znodePath
+     */
+    public void watchNode(String znodePath) throws Exception {
+        // Check if the znode exists
+        Stat stat = zk.exists(znodePath, this);
+
+        if (stat != null) {
+            // Start watching the znode for changes
+            zk.getData(znodePath, this, null);
+        } else {
+            System.out.println("ZNode does not exist.");
+        }
+    }
+
+    public void registerEphemeralZnode(String znodeName, String data) throws Exception {
+        Stat stat = this.zk.exists(znodeName, false); // Check if the ZNode already exists
+
+        if (stat == null) {
+            // Create a new ZNode
+            byte[] byteData = data.getBytes();
+            CreateMode createMode = CreateMode.EPHEMERAL; // Set the create mode for the ZNode
+
+            this.zk.create(znodeName, byteData, ZooDefs.Ids.OPEN_ACL_UNSAFE, createMode);
+            this.zk.exists(znodeName, this);
+            System.out.println("ZNode created: " + znodeName);
+        } else {
+            System.out.println("ZNode already exists: " + znodeName);
+        }
+    }
+
+    public void registerPersistentZnode(String znodeName, String data) throws Exception {
         Stat stat = this.zk.exists(znodeName, false); // Check if the ZNode already exists
 
         if (stat == null) {
@@ -38,22 +134,90 @@ public class ZNodeController implements Watcher {
             CreateMode createMode = CreateMode.PERSISTENT; // Set the create mode for the ZNode
 
             this.zk.create(znodeName, byteData, ZooDefs.Ids.OPEN_ACL_UNSAFE, createMode);
+            this.zk.exists(znodeName, this);
             System.out.println("ZNode created: " + znodeName);
         } else {
             System.out.println("ZNode already exists: " + znodeName);
         }
     }
 
-    public void killZnode(String znodeName) throws Exception{
-
-    }
+    /**
+     * Returns all children znodes of persistent znode specified.
+     * @param znode the Znode of which the childrens are requested
+     * @return a String with all childrens of the znode
+     */
     public String listAllZNodes(String znode) throws Exception {
-        // Add a watch to the znode
-        List<String> children = zk.getChildren(znode, this);
+        List<String> children = zk.getChildren(znode, null);
         return children.toString();
     }
 
-    public String listMyData(String znodeName) throws Exception {
+    /**
+     * Returns the information of a node data based on the node name
+     * retrieving it from /monitors/$znodename$
+     * @return a JsonObject object containing the information of the node
+     */
+    public JsonObject getMonitorData(String znode) throws Exception {
+        String nodeInfo = new String(zk.getData("/monitors/"+znode, null, null));
+        JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
+        return jsonObj;
+    }
+
+    /**
+     * Return only the internal IP of the monitor that called this worker to be born
+     * @param monitorName
+     * @return the monitorIp given by registerMe as acquired from the ENVIRONMENT VARIABLE
+     * @throws Exception
+     */
+    public String getMyMonitorIP(String monitorName) throws Exception {
+        JsonObject obj = getMonitorData(monitorName);
+        return obj.getString("ipAddress");
+    }
+
+    /**
+     * Returns the information of a node data based on the node name
+     * retrieving it from /monitors/$znodename$
+     * @return a JsonObject object containing the information of the node
+     */
+    public JsonObject getWorkerData(String znode) throws Exception {
+        String nodeInfo = new String(zk.getData("/workers/"+znode, null, null));
+        JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
+        return jsonObj;
+    }
+
+    /**
+     * Returns the information of a task of a specific job.
+     * @param znode the znode path of the task.
+     * @return a JsonObject object containing the information of the task
+     */
+    public JsonObject getTaskData(String znode) throws Exception {
+        String nodeInfo = new String(zk.getData("/jobs/"+znode, null, null));
+        JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
+        return jsonObj;
+    }
+
+    /**
+     * Updates the 'status' parameter of the json of a task.
+     * @param znode the znode path for the corresponding task
+     * @param status some status from the enum TaskStatus
+     */
+    public void updateTaskStatus(String znode, TaskStatus status){
+        try {
+            JsonObject currData = getTaskData(znode);
+            JsonValue v = Json.createValue(status.toString());
+            currData.put("status",v);
+            zk.setData(znode, Jsonizer.jsonObjectToString(currData).getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Return all alive workers in the system based on their registrations in ZK
+     * This
+     */
+    //public ArrayList<String>
+
+    public String listChildrenData(String znodeName) throws Exception {
         // Add a watch to the znode
         // Get the children (subnodes) of the znode
         List<String> children = zk.getChildren(znodeName, this);
@@ -73,4 +237,5 @@ public class ZNodeController implements Watcher {
         // Return the list as a string using toString
         return dataStrings.toString();
     }
+
 }

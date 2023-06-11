@@ -1,8 +1,11 @@
 package org.example;
 
 import io.javalin.Javalin;
+import io.javalin.http.servlet.Task;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.data.Stat;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,11 +21,20 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String containerName = System.getenv("CONTAINER_NAME");
+        //String containerName = System.getenv("CONTAINER_NAME");
+        //String dedicatedToMonitor = System.getenv("DEDICATED_T0");
+        //String task = System.getenv("TASK_PATH");
+
+        String containerName = "wjimy";
+        String dedicatedToMonitor = "fathermonitor";
+
         if(containerName == null){
             throw new Error("Environment variable CONTAINER_NAME must be set!");
         }
 
+        if(dedicatedToMonitor == null){
+            throw new Error("Environment variable DEDICATED_TO must be set!");
+        }
         String ipAddress = null;
 
         try {
@@ -32,24 +44,14 @@ public class Main {
         } catch (UnknownHostException e) {
             throw new Error("Unknown host exception");
         }
-        if(containerName.contentEquals("fathermonitor")) {
-            try {
-                // Wait for 30 seconds
-                Thread.sleep(30000);
-                // Continue with the rest of your program
-                System.out.println("Finished waiting for 30 seconds for ZK instances to initialize...");
-            } catch (InterruptedException e) {
-                throw new Error("Cannot wait for you baby...");
-            }
-        }
 
         String zkAddress = Main.zkAddresses[rng.nextInt(Main.zkAddresses.length)];
+        zkAddress = "192.168.1.105:2181";
 
         System.out.println("Will contact ZK instance at: " + zkAddress);
 
-        Javalin app = Javalin.create().start(7000);
+        Javalin app = Javalin.create().start(6000);
         System.out.println("Waiting for requests to arrive...");
-
 
         app.get("/api/zk/status", ctx -> {
             ctx.result("ZK is active: " + zkAlive);
@@ -60,37 +62,37 @@ public class Main {
         });
 
 
-
         try {
             ZooKeeper zk = new ZooKeeper(zkAddress, 20000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
-            zController.registerZnode("/monitors", "");
-            zController.registerZnode("/monitors/" + containerName, ipAddress);
-            zController.registerZnode("/monitors/" + containerName + "/jobs", "reduce.jar");
-            zController.registerZnode("/monitors/" + containerName + "/dataset", "file.csv");
+            TaskController tController = new TaskController(zController);
+            zController.registerMe(containerName, ipAddress, dedicatedToMonitor);
 
-            app.get("/api/zk/znodes/monitors", ctx -> {
-                ctx.result(zController.listAllZNodes("/monitors"));
+            app.get("/api/occupied", ctx -> {
+                ctx.result(String.valueOf(zController.iAmOccupied(containerName)));
+                ctx.status(200); // Set the HTTP status code
             });
 
-            app.get("/api/zk/znodes/workers", ctx -> {
-                ctx.result(zController.listAllZNodes("/workers"));
-            });
-
-            app.get("/api/zk/znode/mydata", ctx -> {
-                ctx.result(zController.listMyData("/monitors/" + containerName));
+            //Handle Task with id = id when receiving request to do so
+            app.post("/api/task/assign/{monitor}/{tid}", ctx -> {
+                if(!zController.iAmOccupied(containerName)){
+                    //Check if assignment is coming from the monitor that deployed me
+                    if(ctx.pathParam("monitor").equals(dedicatedToMonitor)){
+                        System.out.println("Will handle task with task znode path: "+ctx.pathParam("id")+" for monitor: "+ctx.pathParam("monitor"));
+                        tController.handleTask(ctx.pathParam("id"));
+                        zController.makeMeOccupied(containerName);
+                        ctx.status(200);
+                    }else{
+                        ctx.status(503); //Not your worker
+                    }
+                }else{
+                    ctx.status(503); //Unavailable if already committed to job
+                }
             });
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
-
-
-
-
-
-
     }
 }
