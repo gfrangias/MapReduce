@@ -1,19 +1,19 @@
 package model;
 
 public class ChunkTask extends Task{
-    private int numOfChunks;
+    private long numOfChunks;
     private long offSetAtFile;
     private String datasetPath;
     private long chunkSize;
 
-    public ChunkTask(String id, String onWorker, String cmd, String znodePath, TaskType type, String dp, int noc, long offs, long csz){
-        super(id, onWorker, cmd, znodePath, type);
+    public ChunkTask(String id, String cmd, String znodePath, TaskType type, String dp, long noc, long offs, long csz){
+        super(id, cmd, znodePath, type);
         this.numOfChunks = noc;
         this.datasetPath = dp;
         this.offSetAtFile = offs;
         this.chunkSize = csz;
     }
-    public int getNumOfChunks() {
+    public long getNumOfChunks() {
         return numOfChunks;
     }
 
@@ -27,6 +27,10 @@ public class ChunkTask extends Task{
 
     public long getChunkSize() {
         return chunkSize;
+    }
+
+    public void assignToWorker(String workerName){
+        this.onWorker = workerName;
     }
 
     @Override

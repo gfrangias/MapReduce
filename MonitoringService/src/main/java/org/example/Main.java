@@ -24,9 +24,7 @@ public class Main {
          * second section.
          */
         String containerName = System.getenv("CONTAINER_NAME");
-        if(System.getenv("JOB_ID")!=null){
 
-        }
         //String containerName = "mjimy";
         String ipAddress = null;
 
@@ -136,7 +134,7 @@ public class Main {
                 if(!zController.iAmOccupied(containerName)){
                     System.out.println("Will handle job with id:"+ctx.pathParam("id") + " for user: "+ctx.pathParam("user"));
                     zController.makeMeOccupied(containerName);
-                    jController.handleJob(ctx.pathParam("id"), ctx.pathParam("user"));
+                    jController.handleJob(ctx.pathParam("id"), ctx.pathParam("user"), containerName);
                     ctx.status(200);
                 }else{
                     ctx.status(503); //Unavailable if already committed to job

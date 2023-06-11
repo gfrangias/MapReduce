@@ -10,9 +10,8 @@ public class Task {
 
     protected TaskType taskType;
 
-    public Task(String id, String worker, String cmd, String znodePath, TaskType type){
+    public Task(String id, String cmd, String znodePath, TaskType type){
         this.taskId = id;
-        this.onWorker = worker;
         this.znodePath = znodePath;
         this.command = cmd;
         this.status = TaskStatus.QUEUED;
@@ -33,4 +32,7 @@ public class Task {
         return znodePath;
     }
 
+    public void setOnWorker(String onWorker) {
+        this.onWorker = onWorker;
+    }
 }

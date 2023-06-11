@@ -5,27 +5,31 @@ import model.Job;
 import model.Task;
 import model.TaskType;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import java.util.*;
 
 
 import javax.json.JsonObject;
+import javax.print.Doc;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Vector;
 
 public class JobController {
 
     private ZNodeController zController;
+    private DockerController dController;
+
+    private String handlerMonitor;
     private static final long CHUNK_SIZE = 1 << 26L;
     private static final long MAX_WORKERS_PER_JOB = 30;
+    private static java.util.Random random = new Random();
     private Job job;
 
     public JobController(ZNodeController zc){
         this.zController = zc;
+        this.dController = new DockerController();
     }
 
     /**
@@ -35,7 +39,8 @@ public class JobController {
      * @param jobNodeId
      * @param forUser
      */
-    public void handleJob(String jobNodeId, String forUser) throws Exception, IOException {
+    public void handleJob(String jobNodeId, String forUser, String handlerMonitor) throws Exception, IOException {
+        this.handlerMonitor = handlerMonitor;
         JsonObject jobInfoObj = zController.getJobData(forUser+"/"+jobNodeId);
         //Structure Job Flow
         System.out.println("Starting Job Flow Design");
@@ -78,7 +83,7 @@ public class JobController {
             numOfWorkers = Math.max(1, Math.min(numOfWorkers, MAX_WORKERS_PER_JOB));
 
             // The total number of chunks.
-            numOfTotalChunks = fileSize / CHUNK_SIZE;
+            numOfTotalChunks = fileSize / CHUNK_SIZE + (fileSize % CHUNK_SIZE == 0 ? 0 : 1);
 
             // Calculates the number of chunks per worker.
             numOfChunksPerWorker = numOfTotalChunks / numOfWorkers;
@@ -112,17 +117,27 @@ public class JobController {
             }
 
             // Enqueue Chunk tasks
-            for ( int w=0; w<nMinChunksPerWorker; w++){
+            for (int w=0; w<numOfWorkers; w++){
                 String id = "t"+UUID.randomUUID().toString().replace("-","");
-                //String id = acquireWorker();
-                // t = new ChunkTask(id, j.getGlobalInputPath(), numOfChunksPerWorker, offsets_for_i.get(w), CHUNK_SIZE);
-                //j.enqeueTask(t);
-                Task t = new ChunkTask(id, "w4234354215","chunk",id, TaskType.CHUNK, "app/shakespeer.txt", 10, 457345934, CHUNK_SIZE);
+                String tZnodePath = j.getJobZnode() + "/tasks/" + id;
+                Task t = new ChunkTask(id,"chunk", tZnodePath, TaskType.CHUNK, j.getGlobalInputPath(), chunks_for_i[w], offsets_for_i[w], CHUNK_SIZE);
+                zController.insertTaskToZK(t);
+                while (true) {
+                    String worker = reserveWorker();
+                    System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
+                    if(assignTask(t,worker)){
+                        t.setOnWorker(worker);
+                        zController.updateWorkerOfTask(t.getZnodePath(), worker);
+                        j.enqeueTask(t);
+                        break;
+                    }
+                    Thread.sleep(10);
+                }
             }
+            System.out.println(j.getTasks());
+            zController.updateJobStatus(j.getJobZnode(), "chunking");
 
             //Deploy workers and assign chunk tasks
-
-
         } 
         else {
             System.out.println("Input file does not exist. Job Failed. Exiting...");
@@ -132,10 +147,43 @@ public class JobController {
         }
     }
 
+    public boolean assignTask(Task t, String worker) throws Exception {
+        String url = "http://"+zController.getWorkerData("worker").getString("ipAddress")+"/api/task/assign?monitor"+this.handlerMonitor+"&tid="+t.getZnodePath();
+        if(HttpClient.post(url, null)==200){
+            return true;
+        }
+        return false;
+    }
 
-    public String acquireWorker(String jobId) {
-
-        return null;
+    public String reserveWorker() throws Exception{
+        List<String> idleWorkers = zController.getAllIdleWorkers();
+        //Select one of the idle workers
+        if(!idleWorkers.isEmpty()){
+            //Choose randomly an idle worker in order to minimize the probability of conflict
+            String currW = idleWorkers.get(random.nextInt(0,idleWorkers.size()));
+            String ipAddress = zController.getWorkerData(currW).getString("ipAddress");
+            String url = "http://"+ipAddress+":6000/api/reserve/"+this.handlerMonitor;
+            if(HttpClient.post(url, null)==200 && zController.getWorkerData(currW).getString("status")=="reserved"){
+                return currW;
+            }else{
+                return null;
+            }
+        }else{
+            //If no idle workers are available then deploy a new one
+            String id = "w"+UUID.randomUUID().toString().replace("-","");
+            dController.deployMonitor(id,this.handlerMonitor);
+            try {
+                // Sleep for 2 seconds to allow worker to initialize
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if(zController.getWorkerData(id).getString("status")=="reserved"){
+                return id;
+            }else{
+                return null;
+            }
+        }
     }
 }
 

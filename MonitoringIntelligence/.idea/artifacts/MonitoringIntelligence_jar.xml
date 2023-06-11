@@ -2,6 +2,9 @@
   <artifact type="jar" name="MonitoringIntelligence:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/MonitoringIntelligence_jar</output-path>
     <root id="archive" name="MonitoringIntelligence.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
       <element id="module-output" name="MonitoringIntelligence" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/ow2/asm/asm-commons/9.4/asm-commons-9.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/jakarta/xml/bind/jakarta.xml.bind-api/2.3.2/jakarta.xml.bind-api-2.3.2.jar" path-in-jar="/" />

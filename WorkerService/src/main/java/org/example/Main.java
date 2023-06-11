@@ -19,11 +19,13 @@ public class Main {
     private static final String[] zkAddresses = {"172.16.0.11:2181", "172.16.0.12:2181", "172.16.0.13:2181"};
     private static Random rng = new Random();
 
+    private static String dedicatedToMonitor;
+    private static String containerName;
+
     public static void main(String[] args) {
 
-        String containerName = System.getenv("CONTAINER_NAME");
-        String dedicatedToMonitor = System.getenv("DEDICATED_T0");
-
+        containerName = System.getenv("CONTAINER_NAME");
+        dedicatedToMonitor = System.getenv("DEDICATED_T0");
 
         if(containerName == null){
             throw new Error("Environment variable CONTAINER_NAME must be set!");
@@ -43,8 +45,6 @@ public class Main {
         }
 
         String zkAddress = Main.zkAddresses[rng.nextInt(Main.zkAddresses.length)];
-        zkAddress = "192.168.1.105:2181";
-
         System.out.println("Will contact ZK instance at: " + zkAddress);
 
         Javalin app = Javalin.create().start(6000);
@@ -56,6 +56,7 @@ public class Main {
 
         app.get("/ping", ctx -> {
             ctx.result("1");
+            ctx.status(200);
         });
 
 
@@ -66,25 +67,38 @@ public class Main {
             TaskController tController = new TaskController(zController);
             zController.registerMe(containerName, ipAddress, dedicatedToMonitor);
 
-            app.get("/api/occupied", ctx -> {
-                ctx.result(String.valueOf(zController.iAmOccupied(containerName)));
+            app.get("/api/status", ctx -> {
+                ctx.result(zController.getWorkerStatus(containerName));
                 ctx.status(200); // Set the HTTP status code
             });
 
             //Handle Task with id = id when receiving request to do so
             app.post("/api/task/assign", ctx -> {
-                if(!zController.iAmOccupied(containerName)){
+                if(zController.iAmReserved(containerName)){
                     //Check if assignment is coming from the monitor that deployed me
                     String monitorName = ctx.queryParam("monitor");
                     String tid = ctx.queryParam("tid");
                     if(monitorName.equals(dedicatedToMonitor)){
+                        if(zController.iAmWorking(containerName)){
+                            ctx.status(503);
+                        }
                         System.out.println("Will handle task with task znode path: "+tid+" for monitor: "+monitorName);
+                        zController.makeMeWorking(containerName);
                         tController.handleTask(tid);
-                        zController.makeMeOccupied(containerName);
                         ctx.status(200);
                     }else{
                         ctx.status(503); //Not your worker
                     }
+                }else{
+                    ctx.status(503); //Unavailable if already committed to job
+                }
+            });
+
+            app.post("/api/reserve/{monitor}", ctx -> {
+                if(zController.iAmIdle(containerName)){
+                    zController.makeMeReserved(containerName);
+                    dedicatedToMonitor = ctx.pathParam("monitor");
+                    ctx.status(200);
                 }else{
                     ctx.status(503); //Unavailable if already committed to job
                 }

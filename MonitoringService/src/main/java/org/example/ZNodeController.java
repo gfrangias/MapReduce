@@ -1,5 +1,6 @@
 package org.example;
 
+import model.Task;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 import javax.json.*;
@@ -248,6 +249,23 @@ public class ZNodeController implements Watcher {
     }
 
 
+    public void insertTaskToZK(Task t) throws Exception {
+        String data = t.toString();
+        registerPersistentZnode(t.getZnodePath(),data);
+        System.out.println("Registered task: "+t.getZnodePath() + " to ZK");
+    }
+
+    public void updateWorkerOfTask(String znodePath, String worker) throws Exception {
+        try {
+            JsonObject currData = getZnodeData(znodePath);
+            JsonValue v = Json.createValue(worker);
+            currData.put("onworker",v);
+            zk.setData(znodePath, Jsonizer.jsonObjectToString(currData).getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Returns all children znodes of persistent znode specified.
      * @param znode the Znode of which the childrens are requested
@@ -258,6 +276,20 @@ public class ZNodeController implements Watcher {
         return children.toString();
     }
 
+    /**
+     * Returns all children znodes of persistent znode specified.
+     * @return a String with all childrens of the znode workers
+     */
+    public List<String> getAllIdleWorkers() throws Exception {
+        List<String> children = zk.getChildren("/workers", null);
+        for(String s : children){
+            JsonObject w = getWorkerData(s);
+            if(w.getString("status").equals("reserved")){
+                children.remove(s);
+            }
+        }
+        return children;
+    }
 
     /**
      * Returns the information of a node data based on the node name
@@ -273,11 +305,34 @@ public class ZNodeController implements Watcher {
 
     /**
      * Returns the information of a node data based on the node name
+     * retrieving it from /workers/$znodename$
+     * @return a JsonObject object containing the information of the node
+     */
+    public JsonObject getWorkerData(String znode) throws Exception {
+        String nodeInfo = new String(zk.getData("/workers/"+znode, null, null));
+        JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
+        return jsonObj;
+    }
+
+    /**
+     * Returns the information of a node data based on the node name
      * retrieving it from /jobs/$znodename$
      * @return a JsonObject object containing the information of the node
      */
     public JsonObject getJobData(String znode) throws Exception {
         String nodeInfo = new String(zk.getData("/jobs/"+znode, null, null));
+        JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
+        return jsonObj;
+    }
+
+    /**
+     * Returns the data of a specific znode
+     * @param znode
+     * @return data in the znode
+     * @throws Exception
+     */
+    public JsonObject getZnodeData(String znode) throws Exception {
+        String nodeInfo = new String(zk.getData(znode, null, null));
         JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
         return jsonObj;
     }
@@ -324,7 +379,6 @@ public class ZNodeController implements Watcher {
         leadingMonitorIP = getLeaderData().getString("ipAddress");
         return leadingMonitorIP;
     }
-
 
     /**
      * Return all alive workers in the system based on their registrations in ZK

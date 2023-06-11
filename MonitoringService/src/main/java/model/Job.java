@@ -66,4 +66,8 @@ public class Job {
     public Task deqeueTask() {
         return tasks.removeLast();
     }
+
+    public LinkedList<Task> getTasks(){
+        return tasks;
+    }
 }

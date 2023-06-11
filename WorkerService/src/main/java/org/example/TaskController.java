@@ -19,10 +19,12 @@ public class TaskController {
         this.taskZnodePath = tid;
         System.out.println("Will handle task with znode path: "+tid);
         JsonObject tData =  zController.getTaskData(taskZnodePath);
+        //tData.getJsonNumber().longValue()
         System.out.println("Task data: "+Jsonizer.jsonObjectToString(tData));
         String taskType = tData.getString("command");
         //Decide whats the type of the type of task to be handled and
         //decide flow of execution appropriately
+        zController.updateTaskStatus(tid, TaskStatus.RUNNING);
 
         //CHUNK TASK
         if(taskType.equals("chunk")){
@@ -30,10 +32,10 @@ public class TaskController {
             String taskResult = systemExecTask();
             if(taskResult!=null){
                 System.out.println("Requested task resulted in :"+taskResult);
-                //.updateTaskStatus(tid, TaskStatus.COMPLETED);
+                zController.updateTaskStatus(tid, TaskStatus.COMPLETED);
             }else{
                 System.out.println("Task failed: "+taskResult);
-                //zController.updateTaskStatus(tid, TaskStatus.FAILED);
+                zController.updateTaskStatus(tid, TaskStatus.FAILED);
             }
         }else{
             System.out.println("Task invalid. Failure");
@@ -44,7 +46,7 @@ public class TaskController {
     public String systemExecTask(){
         String result = "";
         try {
-            Process process = Runtime.getRuntime().exec("echo Hello World");
+            Process process = Runtime.getRuntime().exec("pwd");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {

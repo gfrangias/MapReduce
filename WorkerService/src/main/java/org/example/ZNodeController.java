@@ -46,7 +46,7 @@ public class ZNodeController implements Watcher {
         }
 
         // Register worker in ZK
-        data = "{\"ipAddress\":\""+ myIP +"\",\"taskPath\":\"empty\", \"occupied\":false}";
+        data = "{\"ipAddress\":\""+ myIP +"\",\"taskpath\":\"empty\", \"status\":\"reserved\"}";
         registerEphemeralZnode("/workers/"+znodeName, data);
         System.out.println("Registered myself in ZK");
 
@@ -61,36 +61,88 @@ public class ZNodeController implements Watcher {
         System.out.println("I am gonna watch the monitor who brought me up");
     }
 
-    public void makeMeAvailable(String znodeName) throws Exception {
+    public String getWorkerStatus(String znodeName){
         try {
             JsonObject currData = getWorkerData(znodeName);
-            String monIp = currData.getString("ipAddress");
-            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":false}";
-            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public void makeMeOccupied(String znodeName) {
-        try {
-            JsonObject currData = getWorkerData(znodeName);
-            String monIp = currData.getString("ipAddress");
-            String newData = "{\"ipAddress\":\"" + monIp + "\", \"occupied\":true}";
-            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public boolean iAmOccupied(String znodeName) {
-        try {
-            boolean status = getWorkerData(znodeName).getBoolean("occupied");
+            String status = currData.getString("status");
             return status;
-        } catch(Exception e){
+        }catch(Exception e){
             e.printStackTrace();
         }
-        return true;
+        return null;
+    }
+
+    public boolean iAmIdle(String znodeName){
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String status = currData.getString("status");
+            if(status.equals("idle")){
+                return true;
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean iAmReserved(String znodeName){
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String status = currData.getString("status");
+            if(status.equals("reserved")){
+                return true;
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean iAmWorking(String znodeName){
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String status = currData.getString("status");
+            if(status.equals("working")){
+                return true;
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void makeMeReserved(String znodeName) {
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String worIp = currData.getString("ipAddress");
+            String newData = "{\"ipAddress\":\"" + worIp + "\", \"taskpath\":\"empty\", \"status\":\"reserved\"}";
+            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void makeMeWorking(String znodeName) {
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String monIp = currData.getString("ipAddress");
+            String taskPath = currData.getString("taskpath");
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"taskpath\": \""+taskPath+"\",\"status\":\"idle\"}";
+            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void makeMeIdle(String znodeName) {
+        try {
+            JsonObject currData = getWorkerData(znodeName);
+            String worIp = currData.getString("ipAddress");
+            String newData = "{\"ipAddress\":\"" + worIp + "\", \"taskpath\": \"empty\",\"status\":\"idle\"}";
+            zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**

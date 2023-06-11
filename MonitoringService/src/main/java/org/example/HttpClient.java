@@ -28,8 +28,8 @@ public class HttpClient {
         return response.toString();
     }
 
-    public static String post(String endpointUrl, String requestBody) {
-        StringBuilder response = new StringBuilder();
+    public static int post(String endpointUrl, String requestBody) {
+        int statusCode = -1;
 
         try {
             URL url = new URL(endpointUrl);
@@ -37,25 +37,21 @@ public class HttpClient {
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
 
-            if(requestBody != null){
+            if (requestBody != null) {
                 OutputStream outputStream = connection.getOutputStream();
                 outputStream.write(requestBody.getBytes());
                 outputStream.flush();
                 outputStream.close();
             }
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
+            statusCode = connection.getResponseCode();
 
             connection.disconnect();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return response.toString();
+        return statusCode;
     }
+
 }

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ArtifactsWorkspaceSettings">
     <artifacts-to-build>
-      <artifact name="monitor" />
+      <artifact name="MonitoringService:jar" />
     </artifacts-to-build>
   </component>
   <component name="AutoImportSettings">
@@ -10,17 +10,34 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../MonitoringIntelligence/.idea/artifacts/MonitoringIntelligence_jar.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MonitoringIntelligence/.idea/artifacts/MonitoringIntelligence_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MonitoringIntelligence/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MonitoringIntelligence/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MonitoringIntelligence/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../MonitoringIntelligence/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MonitoringIntelligence/src/main/resources/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/artifacts/monitor.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/artifacts/MonitoringService_jar/MonitoringService.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/ChunkTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/ChunkTask.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/Job.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Job.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/MapTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/MapTask.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/model/ReduceTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/ReduceTask.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/Task.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Task.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/HttpClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/HttpClient.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerIntelligence/src/main/resources/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerService/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../WorkerService/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../WorkerService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/TaskController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/TaskController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/ZNodeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docker_env/monitor.jar" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/monitor.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/MonitoringIntelligence.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/monitor.jar" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/fetch_containerlog.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/fetch_containerlog.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/manage_job.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/manage_job.php" afterDir="false" />
@@ -34,8 +51,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="Enum" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -51,9 +68,10 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;Z:/mp/MapReduce/ExecutableService&quot;,
+    &quot;last_opened_file_path&quot;: &quot;Z:/mp/MapReduce/docker_env&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -174,7 +192,12 @@
       <workItem from="1686417909222" duration="300000" />
       <workItem from="1686418743726" duration="1061000" />
       <workItem from="1686467496388" duration="1803000" />
-      <workItem from="1686471781420" duration="1762000" />
+      <workItem from="1686471781420" duration="15301000" />
+      <workItem from="1686490592972" duration="42000" />
+      <workItem from="1686490654217" duration="58000" />
+      <workItem from="1686491112120" duration="758000" />
+      <workItem from="1686491887837" duration="298000" />
+      <workItem from="1686494963963" duration="323000" />
     </task>
     <servers />
   </component>
