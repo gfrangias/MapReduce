@@ -1,7 +1,5 @@
 package model;
 
-import javax.json.JsonObject;
-
 public class ChunkTask extends Task{
     private int numOfChunks;
     private long offSetAtFile;
