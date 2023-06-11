@@ -106,8 +106,6 @@ public class JobController {
                 sum += chunks_for_i[i];
             }
 
-
-
             System.out.println(" > Will deploy "+numOfWorkers+" workers to be used for chunking of the dataset.");
             for (int i=0; i<(int) numOfWorkers; i++) {
                 System.out.println("> Worker [" + i + "] will create " + chunks_for_i[i] + " chunks of 64MB totaling: " + chunks_for_i[i] * CHUNK_SIZE + " bytes.");
