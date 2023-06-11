@@ -62,6 +62,7 @@ public class ZNodeController implements Watcher {
                 System.out.println("As a fathermonitor I will init the znode of monitors...");
                 registerPersistentZnode("/monitors", "");
             }
+
             //Init the /elections znode if not exists
             stat = this.zk.exists("/elections", false);
             if (stat == null) {
@@ -323,6 +324,13 @@ public class ZNodeController implements Watcher {
         leadingMonitorIP = getLeaderData().getString("ipAddress");
         return leadingMonitorIP;
     }
+
+
+    /**
+     * Return all alive workers in the system based on their registrations in ZK
+     * This
+     */
+    //public ArrayList<String>
 
     public String listChildrenData(String znodeName) throws Exception {
         // Add a watch to the znode

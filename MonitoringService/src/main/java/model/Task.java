@@ -29,4 +29,8 @@ public class Task {
         this.status = TaskStatus.FAILED;
     }
 
+    public String getZnodePath() {
+        return znodePath;
+    }
+
 }

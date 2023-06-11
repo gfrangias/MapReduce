@@ -131,7 +131,7 @@ public class Main {
                 ctx.status(200); // Set the HTTP status code
             });
 
-            //Handle Job with id = id
+            //Handle Job with id = id when receiving request to do so
             app.post("/api/job/assign/{user}/{id}", ctx -> {
                 if(!zController.iAmOccupied(containerName)){
                     System.out.println("Will handle job with id:"+ctx.pathParam("id") + " for user: "+ctx.pathParam("user"));

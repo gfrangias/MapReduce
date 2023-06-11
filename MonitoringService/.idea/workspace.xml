@@ -10,19 +10,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e57b97-d126-4f1e-9f5e-b728babe5001" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" beforeDir="false" afterPath="$PROJECT_DIR$/../ExecutableService/core/src/main/java/org/example/Distributor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/ChunkTask.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/ChunkTask.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/model/Job.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Job.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/model/Task.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/Task.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/model/TaskType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/model/TaskType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/DockerController.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/JobController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/ZNodeController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerService/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerService/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/ZNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WorkerService/src/main/java/org/example/ZNodeController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/monitor.jar" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/monitor.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/fetch_containerlog.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containerScripts/fetch_containerlog.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/containers.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/manage_job.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/manage_job.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docker_env/ui_svc_data/submit_job.php" beforeDir="false" afterPath="$PROJECT_DIR$/../docker_env/ui_svc_data/submit_job.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -168,7 +170,11 @@
       <workItem from="1685628149167" duration="7309000" />
       <workItem from="1686065317457" duration="15463000" />
       <workItem from="1686316746990" duration="16547000" />
-      <workItem from="1686402072776" duration="9876000" />
+      <workItem from="1686402072776" duration="10947000" />
+      <workItem from="1686417909222" duration="300000" />
+      <workItem from="1686418743726" duration="1061000" />
+      <workItem from="1686467496388" duration="1803000" />
+      <workItem from="1686471781420" duration="1762000" />
     </task>
     <servers />
   </component>
