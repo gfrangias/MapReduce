@@ -1,4 +1,4 @@
-package org.example;
+package model;
 
 public enum TaskStatus {
     QUEUED,

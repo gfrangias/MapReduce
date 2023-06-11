@@ -21,12 +21,9 @@ public class Main {
 
     public static void main(String[] args) {
 
-        //String containerName = System.getenv("CONTAINER_NAME");
-        //String dedicatedToMonitor = System.getenv("DEDICATED_T0");
-        //String task = System.getenv("TASK_PATH");
+        String containerName = System.getenv("CONTAINER_NAME");
+        String dedicatedToMonitor = System.getenv("DEDICATED_T0");
 
-        String containerName = "wjimy";
-        String dedicatedToMonitor = "fathermonitor";
 
         if(containerName == null){
             throw new Error("Environment variable CONTAINER_NAME must be set!");
@@ -75,12 +72,14 @@ public class Main {
             });
 
             //Handle Task with id = id when receiving request to do so
-            app.post("/api/task/assign/{monitor}/{tid}", ctx -> {
+            app.post("/api/task/assign", ctx -> {
                 if(!zController.iAmOccupied(containerName)){
                     //Check if assignment is coming from the monitor that deployed me
-                    if(ctx.pathParam("monitor").equals(dedicatedToMonitor)){
-                        System.out.println("Will handle task with task znode path: "+ctx.pathParam("id")+" for monitor: "+ctx.pathParam("monitor"));
-                        tController.handleTask(ctx.pathParam("id"));
+                    String monitorName = ctx.queryParam("monitor");
+                    String tid = ctx.queryParam("tid");
+                    if(monitorName.equals(dedicatedToMonitor)){
+                        System.out.println("Will handle task with task znode path: "+tid+" for monitor: "+monitorName);
+                        tController.handleTask(tid);
                         zController.makeMeOccupied(containerName);
                         ctx.status(200);
                     }else{

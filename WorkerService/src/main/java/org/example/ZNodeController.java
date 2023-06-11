@@ -1,11 +1,11 @@
 package org.example;
 
+import model.TaskStatus;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 
 import javax.json.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ZNodeController implements Watcher {
@@ -190,7 +190,7 @@ public class ZNodeController implements Watcher {
      * @return a JsonObject object containing the information of the task
      */
     public JsonObject getTaskData(String znode) throws Exception {
-        String nodeInfo = new String(zk.getData("/jobs/"+znode, null, null));
+        String nodeInfo = new String(zk.getData(znode, null, null));
         JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
         return jsonObj;
     }
@@ -208,6 +208,15 @@ public class ZNodeController implements Watcher {
             zk.setData(znode, Jsonizer.jsonObjectToString(currData).getBytes(), -1);
         }catch(Exception e){
             e.printStackTrace();
+        }
+    }
+
+    public void writeTaskResult(String znode, String result) throws Exception {
+        //Init the /workers node if not exists
+        Stat stat = this.zk.exists("/workers", false);
+        if (stat == null) {
+            System.out.println("Init /workers node because it didnt exist...");
+            registerPersistentZnode("/workers", "");
         }
     }
 
