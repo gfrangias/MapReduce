@@ -19,9 +19,22 @@ def map_character_count():
         for i in range(len(word)):
             print(word[i], 1)
 
+def reduce_word_count():
+
+    for line in sys.stdin:
+        parts = line.strip().split()
+
+        key = parts[0]
+        values = list(map(int, parts[1:]))
+
+        result = sum(values)
+
+        print(key, result)
+
 functions = {
     "map_word_count":map_word_count,
-    "map_character_count":map_character_count
+    "map_character_count":map_character_count,
+    "reduce_word_count":reduce_word_count
 }
 
 if __name__ == "__main__":
