@@ -5,12 +5,14 @@ import model.Job;
 import model.Task;
 import model.TaskType;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 
 import javax.json.JsonObject;
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Vector;
@@ -18,8 +20,8 @@ import java.util.Vector;
 public class JobController {
 
     private ZNodeController zController;
-    private static long CHUNK_SIZE = 67108864L;
-    private static int MAX_WORKERS_PER_JOB = 30;
+    private static final long CHUNK_SIZE = 1 << 26L;
+    private static final long MAX_WORKERS_PER_JOB = 30;
     private Job job;
 
     public JobController(ZNodeController zc){
@@ -33,7 +35,7 @@ public class JobController {
      * @param jobNodeId
      * @param forUser
      */
-    public void handleJob(String jobNodeId, String forUser) throws Exception{
+    public void handleJob(String jobNodeId, String forUser) throws Exception, IOException {
         JsonObject jobInfoObj = zController.getJobData(forUser+"/"+jobNodeId);
         //Structure Job Flow
         System.out.println("Starting Job Flow Design");
@@ -50,13 +52,12 @@ public class JobController {
         File file = new File(j.getGlobalInputPath());
         System.out.println(file.getAbsolutePath());
 
-        Vector<Long> offsets_for_i = new Vector<Long>();
-        Vector<Integer> chunks_for_i = new Vector<Integer>();
-
         long fileSize = 0;
-        int numOfWorkers = 0;
+        long numOfWorkers = 0;
+        long numOfTotalChunks = 0;
         int nMinChunksPerWorker = 10;
-        int numOfChunksPerWorker = 0;
+        long numOfChunksPerWorker = 0;
+        long remainingChunks = 0;
 
         /**
          * We have max 30 workers for chunking a dataset file in a distributed way.
@@ -64,40 +65,55 @@ public class JobController {
          * So with 30 workers we can chunk a file of max N_min*30*64MB size using N_min chunks per worker.
          * If this limit is reached then the number of chunks per worker should be increased and the team will be consisted of exactly 30 workers.
          */
+        
         if (file.exists()) {
             fileSize = file.length();
             System.out.println(" > File size in bytes: " + fileSize);
             System.out.println(" > Calculating workers and chunks per worker needed for chunk size: 64 MB.");
 
-            if(MAX_WORKERS_PER_JOB*CHUNK_SIZE*nMinChunksPerWorker <= fileSize){
-                numOfWorkers = MAX_WORKERS_PER_JOB;
-                numOfChunksPerWorker = (int) Math.ceil((double)1.0* fileSize/(MAX_WORKERS_PER_JOB*CHUNK_SIZE));
-            }else {
-                numOfChunksPerWorker = nMinChunksPerWorker;
-                numOfWorkers = (int) Math.ceil((double) 1.0 * fileSize / (nMinChunksPerWorker * CHUNK_SIZE));
-            }
+            // Max number of workers
+            numOfWorkers = (long) fileSize / ((long) CHUNK_SIZE * 10);
 
+            // Redefine the number of workers based on the upper bound of workers.
+            numOfWorkers = Math.max(1, Math.min(numOfWorkers, MAX_WORKERS_PER_JOB));
 
-            for (int i=0; i<numOfWorkers; i++) {
+            // The total number of chunks.
+            numOfTotalChunks = fileSize / CHUNK_SIZE;
 
-                long offsetI = i * (fileSize / numOfWorkers);
-                offsets_for_i.add(offsetI);
-                if (i == numOfWorkers - 1) {
-                    BigDecimal fsz = new BigDecimal(fileSize);
-                    BigDecimal csz = new BigDecimal(CHUNK_SIZE);
-                    BigDecimal res = fsz.divide(csz, 10, RoundingMode.CEILING);
-                    int totalChunks = res.setScale(0, RoundingMode.CEILING).intValue();
-                    int othersHave = (numOfWorkers-1)*numOfChunksPerWorker;
-                    chunks_for_i.add(totalChunks-othersHave);
-                } else {
-                    chunks_for_i.add(numOfChunksPerWorker);
+            // Calculates the number of chunks per worker.
+            numOfChunksPerWorker = numOfTotalChunks / numOfWorkers;
+
+            // The remaining number of chunks.
+            remainingChunks = numOfTotalChunks % numOfWorkers;
+
+            long[] chunks_for_i = new long[(int) numOfWorkers];
+
+            // Calculate the number of chunks per worker...
+            for (long i=0; i<numOfWorkers; i++) {
+                if (i < remainingChunks) {
+                    chunks_for_i[(int) i] = numOfChunksPerWorker + 1;
+                }
+                else {
+                    chunks_for_i[(int) i] = numOfChunksPerWorker;
                 }
             }
-            System.out.println(" > Will deploy "+numOfWorkers+" workers to be used for chunking of the dataset.");
-            System.out.println(" > Each worker will create "+numOfChunksPerWorker+" chunks of 64MB totaling: "+numOfChunksPerWorker*(numOfWorkers-1)+ " chunks.");
-            System.out.println(" > Last worker will create "+chunks_for_i.lastElement()+" chunks of 64MB.");
 
-            //Enqueue Chunk tasks
+            long[] offsets_for_i = new long[(int) numOfWorkers];
+            long sum = 0;
+
+            for (int i=0; i<(int) numOfWorkers; i++) {
+                offsets_for_i[i] = sum;
+                sum += chunks_for_i[i];
+            }
+
+
+
+            System.out.println(" > Will deploy "+numOfWorkers+" workers to be used for chunking of the dataset.");
+            for (int i=0; i<(int) numOfWorkers; i++) {
+                System.out.println("> Worker [" + i + "] will create " + chunks_for_i[i] + " chunks of 64MB totaling: " + chunks_for_i[i] * CHUNK_SIZE + " bytes.");
+            }
+
+            // Enqueue Chunk tasks
             for ( int w=0; w<nMinChunksPerWorker; w++){
                 String id = "t"+UUID.randomUUID().toString().replace("-","");
                 //String id = acquireWorker();
@@ -109,11 +125,12 @@ public class JobController {
             //Deploy workers and assign chunk tasks
 
 
-        } else {
+        } 
+        else {
             System.out.println("Input file does not exist. Job Failed. Exiting...");
             System.out.println("Job cannot be executed, marking it as failed...");
             zController.updateJobStatus(j.getJobZnode(), "failed");
-            System.exit(0);
+            System.exit(1);
         }
     }
 
