@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 public class Distributor {
 	
-	public Distributor(File file, long chunkSize, long offset, int numOfChunks) {
+	public Distributor(File file, long chunkSize, long offset, long numOfChunks) {
 		this.inputFile = file;
 		this.numOfChunks = numOfChunks;
 		this.CHUNK_SIZE = chunkSize;
@@ -16,21 +16,21 @@ public class Distributor {
 	public final File inputFile;
 	public final long CHUNK_SIZE;
 	public final long offset;
-	public final int numOfChunks;
+	public final long numOfChunks;
 	
 	public boolean create_chunk_file() throws IOException {
 
 		for (int i=0; i<numOfChunks;i++){
 			RandomAccessFile stream = new RandomAccessFile(inputFile, "r");
 
-			stream.seek(this.offset+(i*CHUNK_SIZE));
+			stream.seek((this.offset + i) * CHUNK_SIZE);
 
 			byte[] data = new byte[(int) CHUNK_SIZE];
 
 			stream.read(data);
 			stream.close();
 
-			File outputFile = new File("chunked_" + ID + ".intermediate");
+			File outputFile = new File("chunked_" + (offset + i) + ".intermediate");
 			FileOutputStream fos = new FileOutputStream(outputFile);
 
 			fos.write(data);
@@ -48,8 +48,8 @@ public class Distributor {
 		
 		String fileName = args[0];
 		int chunk_size = Integer.parseInt(args[1]);
-		long offset = Integer.parseInt(args[2]);
-		int numOfCh = Long.parseLong(args[3]);
+		long offset = Long.parseLong(args[2]);
+		long numOfCh = Long.parseLong(args[3]);
 		
 		Distributor chunk = new Distributor(new File(fileName), chunk_size, offset, numOfCh);
 		
