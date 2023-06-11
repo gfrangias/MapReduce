@@ -1,6 +1,6 @@
 package model;
 
-import java.util.Vector;
+import java.util.LinkedList;
 
 public class Job {
     private String mapCommand;
@@ -11,10 +11,10 @@ public class Job {
     private String executableJar;
     private String jobZnode;
     private String globalInputPath;
-    private Vector<Task> tasks;
+    private LinkedList<Task> tasks;
 
     public Job(String input, String jar, String znode){
-        this.tasks = new Vector<Task>();
+        this.tasks = new LinkedList<Task>();
         this.executableJar = jar;
         this.globalInputPath = input;
         this.jobZnode = znode;
@@ -61,11 +61,9 @@ public class Job {
     }
 
     public void enqeueTask(Task t){
-        tasks.add(t);
+        tasks.push(t);
     }
     public Task deqeueTask() {
-        Task t = tasks.lastElement();
-        tasks.remove(tasks.indexOf(t));
-        return t;
+        return tasks.removeLast();
     }
 }
