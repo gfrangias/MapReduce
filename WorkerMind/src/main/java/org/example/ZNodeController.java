@@ -147,6 +147,10 @@ public class ZNodeController implements Watcher {
         }
     }
 
+
+    public void storeChunkFilePath(){
+
+    }
     /**
      * Make this worker a watcher for a specified znode name in ZK
      * @param znodePath

@@ -5,9 +5,6 @@ import java.util.LinkedList;
 public class Job {
     private String mapCommand;
     private String reduceCommand;
-    private String chunkCommand;
-    private String shuffleCommand;
-    private String mergeCommand;
     private String executableJar;
     private String jobZnode;
     private String globalInputPath;
@@ -20,12 +17,9 @@ public class Job {
         this.jobZnode = znode;
     }
 
-    public void setJobCommands(String map, String reduce, String chunk, String shuffle, String merge){
+    public void setJobCommands(String map, String reduce){
         this.mapCommand = map;
         this.reduceCommand = reduce;
-        this.chunkCommand = chunk;
-        this.shuffleCommand = shuffle;
-        this.mergeCommand = merge;
     }
 
     public String getGlobalInputPath() {
@@ -44,21 +38,6 @@ public class Job {
         return mapCommand;
     }
 
-    public String getReduceCommand() {
-        return reduceCommand;
-    }
-
-    public String getChunkCommand() {
-        return chunkCommand;
-    }
-
-    public String getShuffleCommand() {
-        return shuffleCommand;
-    }
-
-    public String getMergeCommand() {
-        return mergeCommand;
-    }
 
     public void enqeueTask(Task t){
         tasks.push(t);
@@ -66,6 +45,8 @@ public class Job {
     public Task deqeueTask() {
         return tasks.removeLast();
     }
+
+    public void deqeueAll() {tasks = new LinkedList<Task>();}
 
     public LinkedList<Task> getTasks(){
         return tasks;

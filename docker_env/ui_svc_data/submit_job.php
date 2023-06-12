@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $executableFiles = scandir($executableDir);
             foreach ($executableFiles as $file) {
               $filename = basename($file);
-              if($filename == '.' || $filename == '..' || trim(pathinfo($filename, PATHINFO_EXTENSION)) != 'py'){
+              if($filename == '.' || $filename == '..' || trim(pathinfo($filename, PATHINFO_EXTENSION)) != 'jar'){
                 continue;
               }
               echo '<option value="'.$file.'">'.$filename.'</option>';

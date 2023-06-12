@@ -1,18 +1,10 @@
 FROM openjdk:20
-# Use an official Python runtime as a parent image
-FROM python:3
-
 # Set the working directory
 WORKDIR /app
 
 # Copy the JAR file into the container
 COPY worker.jar /app/worker.jar
 
-# Expose the desired port
-EXPOSE 6000
-
-RUN pip3 install --upgrade pip && \
-    pip3 install numpy
-
+WORKDIR /app
 # Set the command to run the JAR file
 CMD ["java", "-jar", "/app/worker.jar"]

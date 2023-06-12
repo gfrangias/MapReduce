@@ -1,10 +1,11 @@
 package org.example;
 
-import model.ChunkTask;
-import model.Job;
-import model.Task;
-import model.TaskType;
+import model.*;
 
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -50,6 +51,8 @@ public class JobController {
         String datasetPath = "uploads/"+user+"/datasets/"+jobInfoObj.getString("dataset_file");
 
         Job j = new Job(datasetPath, jobInfoObj.getString("executable_file"),forUser+"/"+jobNodeId);
+        j.setJobCommands(jobInfoObj.getString("map_method"), jobInfoObj.getString("reduce_method"));
+
         zController.updateJobStatus(j.getJobZnode(), "planning");
 
         //Parse File to check for input size
@@ -135,12 +138,15 @@ public class JobController {
                     System.out.println("Failed to assign, trying again...");
                 }
             }
+
             System.out.println(j.getTasks());
             zController.updateJobStatus(j.getJobZnode(), "chunking");
             while(true){
                 int chunkTasksCompleted = 0;
-                for(String s : zController.getTasksOfJob(j.getJobZnode())){
-                    JsonObject data = zController.getZnodeData(j.getJobZnode() + "/" + s);
+                System.out.println(zController.getTasksOfJob("/jobs/"+j.getJobZnode()));
+                for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
+                    System.out.println(zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s));
+                    JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
                     if(data.getString("command").equals("chunk") && data.getString("status").equals("COMPLETED")) {
                         chunkTasksCompleted++;
                     }
@@ -154,6 +160,35 @@ public class JobController {
 
             System.out.println("Proceeding to Mapping...");
 
+            //Find out what chunks where created at the chunk stage
+            String jobResultDir = "/app/uploads/results/"+j.getJobZnode();
+            List<String> chunkFiles = scanDirectory(jobResultDir);
+
+            int index = 0;
+            zController.updateJobStatus(j.getJobZnode(), "mapping");
+            for(String s: chunkFiles){
+                s = "/app/uploads/results/" + j.getJobZnode() + "/"+s;
+                //Proceed to form MapTasks for each of the chunks
+                String id = "t"+UUID.randomUUID().toString().replace("-","");
+                String tZnodePath = j.getJobZnode() + "/tasks/" + id;
+                MapTask t = new MapTask(id, "/jobs/"+tZnodePath, "map", TaskType.MAP, index, "java -cp /app/uploads/"+user+"/executables/"+j.getExecutableJar()+" "+j.getMapCommand()+" "+s+" > "+jobResultDir+"/map_"+index+".intermediate");
+                index++;
+                System.out.println("Created task with exec cmd: "+t.getFunctionName());
+                zController.insertTaskToZK(t);
+                System.out.println(t.getZnodePath());
+                while (true) {
+                    String worker = reserveWorker();
+                    System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
+                    if(assignTask(t,worker)){
+                        t.setOnWorker(worker);
+                        zController.updateWorkerOfTask(t.getZnodePath(), worker);
+                        j.enqeueTask(t);
+                        break;
+                    }
+                    Thread.sleep(10);
+                    System.out.println("Failed to assign, trying again...");
+                }
+            }
         }
         else {
             System.out.println("Input file does not exist. Job Failed. Exiting...");
@@ -161,6 +196,22 @@ public class JobController {
             zController.updateJobStatus(j.getJobZnode(), "failed");
             System.exit(1);
         }
+    }
+
+    public static List<String> scanDirectory(String directoryPath) {
+        List<String> fileList = new ArrayList<>();
+
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(directoryPath))) {
+            for (Path path : directoryStream) {
+                if (Files.isRegularFile(path) && path.getFileName().toString().startsWith("chunked_")) {
+                    fileList.add(path.getFileName().toString());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return fileList;
     }
 
     public boolean assignTask(Task t, String worker) throws Exception {
