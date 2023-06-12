@@ -166,6 +166,8 @@ public class JobController {
 
             int index = 0;
             zController.updateJobStatus(j.getJobZnode(), "mapping");
+
+
             for(String s: chunkFiles){
                 s = "/app/uploads/results/" + j.getJobZnode() + "/"+s;
                 //Proceed to form MapTasks for each of the chunks
@@ -176,8 +178,13 @@ public class JobController {
                 System.out.println("Created task with exec cmd: "+t.getFunctionName());
                 zController.insertTaskToZK(t);
                 System.out.println(t.getZnodePath());
+
+
                 while (true) {
                     String worker = reserveWorker();
+                    if(worker==null || worker.equals("null")){
+                        continue;
+                    }
                     System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
                     if(assignTask(t,worker)){
                         t.setOnWorker(worker);
@@ -188,6 +195,25 @@ public class JobController {
                     Thread.sleep(10);
                     System.out.println("Failed to assign, trying again...");
                 }
+            }
+
+            System.out.println(j.getTasks());
+            zController.updateJobStatus(j.getJobZnode(), "chunking");
+            while(true){
+                int chunkTasksCompleted = 0;
+                System.out.println(zController.getTasksOfJob("/jobs/"+j.getJobZnode()));
+                for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
+                    System.out.println(zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s));
+                    JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
+                    if(data.getString("command").equals("chunk") && data.getString("status").equals("COMPLETED")) {
+                        chunkTasksCompleted++;
+                    }
+                }
+                //If all chunk tasks completed then stop waiting and proceed to mapping
+                if(chunkTasksCompleted==j.getTasks().size()){
+                    break;
+                }
+                Thread.sleep(500);
             }
         }
         else {
@@ -215,9 +241,7 @@ public class JobController {
     }
 
     public boolean assignTask(Task t, String worker) throws Exception {
-        System.out.println(t.getZnodePath());
         String url = "http://"+zController.getWorkerData(worker).getString("ipAddress")+":6000/api/task/assign?monitor="+this.handlerMonitor+"&tid="+t.getZnodePath();
-        System.out.println(url);
         int status = HttpClient.post(url, null);
         System.out.println("Worker said : "+status);
         if(status==200){
@@ -232,7 +256,7 @@ public class JobController {
             idleWorkers = zController.getAllIdleWorkers();
         } catch(Exception e){
             idleWorkers = new ArrayList<String>();
-            System.out.println("Totally not workers in the system, will deploy...");
+            System.out.println("Totally not idle workers in the system, will deploy...");
         }
 
         //Select one of the idle workers
@@ -258,7 +282,7 @@ public class JobController {
             System.out.println("Deployment successful");
             try {
                 // Sleep for 2 seconds to allow worker to initialize
-                Thread.sleep(3000);
+                Thread.sleep(3300);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

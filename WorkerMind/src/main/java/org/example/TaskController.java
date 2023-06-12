@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 public class TaskController {
     private String taskZnodePath;
@@ -16,7 +17,7 @@ public class TaskController {
         this.zController = zc;
     }
 
-    public void handleTask(String tid) throws Exception {
+    public void handleTask(String tid, String workerName) throws Exception {
         this.taskZnodePath = tid;
         System.out.println("Will handle task with znode path: "+tid);
         JsonObject tData =  zController.getTaskData(taskZnodePath);
@@ -26,6 +27,8 @@ public class TaskController {
         //Decide whats the type of the type of task to be handled and
         //decide flow of execution appropriately
         zController.updateTaskStatus(tid, TaskStatus.RUNNING);
+
+
         //CHUNK TASK
         if(taskType.equals("chunk")){
             long noc = tData.getJsonNumber("numOfChunks").longValue();
@@ -65,6 +68,7 @@ public class TaskController {
             }else{
                 zController.updateTaskStatus(tid, TaskStatus.FAILED);
             }
+            zController.makeMeIdle(workerName);
 
 
         }else if(taskType.equals("map")){
@@ -72,38 +76,21 @@ public class TaskController {
             int index = tData.getJsonNumber("index").intValue();
             MapTask t = new MapTask(tid,tData.getString("onworker"), tid, tData.getString("command"), TaskType.MAP, index, tData.getString("function"));
             System.out.println(t.toString());
-            String result = systemExecTask(tData.getString("function"));
-            if(result.equals("error")){
+            try{
+                spawnProcess(tData.getString("function"));
                 zController.updateTaskStatus(tid, TaskStatus.COMPLETED);
-                System.out.println("Success");
-            }else{
+            } catch (Exception e){
                 zController.updateTaskStatus(tid, TaskStatus.FAILED);
-                System.out.println("Failed");
             }
+            zController.makeMeIdle(workerName);
         }  else{
             System.out.println("Task invalid. Failure");
             zController.updateTaskStatus(tid, TaskStatus.FAILED);
         }
     }
 
-    public String systemExecTask(String command){
-        try {
-            // Execute the command
-            System.out.println("Will execute command: "+ command);
-            Process process = new ProcessBuilder(command).start();
-            // Wait for the process to finish
-            int exitCode = process.waitFor();
-
-            // Optionally, handle the exit code or perform other actions based on the result
-            if (exitCode == 0) {
-                System.out.println("JAR execution completed successfully.");
-                return String.valueOf(exitCode);
-            } else {
-                System.out.println("JAR execution failed with exit code: " + exitCode);
-                return "error";
-            }
-        } catch (IOException | InterruptedException e) {
-            return "error";
-        }
+    public void spawnProcess(String cmd) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", "-c", cmd);
+        Process process = processBuilder.start();
     }
 }

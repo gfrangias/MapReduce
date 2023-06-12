@@ -84,10 +84,10 @@ public class Main {
                         if(zController.iAmWorking(containerName)){
                             ctx.status(503);
                         }
+                        zController.makeMeWorking(containerName);
                         System.out.println("Will handle task with task znode path: "+tid+" for monitor: "+monitorName);
                         ctx.status(200);
-                        zController.makeMeWorking(containerName);
-                        tController.handleTask(tid);
+                        tController.handleTask(tid,containerName);
                     }else{
                         ctx.status(503); //Not your worker
                     }

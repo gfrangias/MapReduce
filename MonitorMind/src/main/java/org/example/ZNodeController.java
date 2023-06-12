@@ -289,13 +289,16 @@ public class ZNodeController implements Watcher {
      */
     public List<String> getAllIdleWorkers() throws Exception {
         List<String> children = zk.getChildren("/workers", null);
+        List<String> idleChildren = new ArrayList<String>();
+        System.out.println("Children of /workers are: "+children);
         for(String s : children){
             JsonObject w = getWorkerData(s);
-            if(w.getString("status").equals("reserved")){
-                children.remove(s);
+            if(w.getString("status").equals("idle")){
+                idleChildren.add(s);
             }
         }
-        return children;
+        System.out.println("Idling children of /workers are: "+idleChildren);
+        return idleChildren;
     }
 
     /**

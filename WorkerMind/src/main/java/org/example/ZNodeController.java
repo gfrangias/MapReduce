@@ -129,7 +129,7 @@ public class ZNodeController implements Watcher {
             JsonObject currData = getWorkerData(znodeName);
             String monIp = currData.getString("ipAddress");
             String taskPath = currData.getString("taskpath");
-            String newData = "{\"ipAddress\":\"" + monIp + "\", \"taskpath\": \""+taskPath+"\",\"status\":\"idle\"}";
+            String newData = "{\"ipAddress\":\"" + monIp + "\", \"taskpath\": \""+taskPath+"\",\"status\":\"working\"}";
             zk.setData("/workers/" + znodeName, newData.getBytes(), -1);
         }catch(Exception e){
             e.printStackTrace();
