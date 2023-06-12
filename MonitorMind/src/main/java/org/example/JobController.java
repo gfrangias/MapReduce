@@ -9,6 +9,9 @@ import java.nio.file.Paths;
 import java.util.*;
 
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.print.Doc;
 import javax.swing.*;
@@ -23,7 +26,7 @@ public class JobController {
     private DockerController dController;
 
     private String handlerMonitor;
-    private static final long CHUNK_SIZE = 1 << 26L;
+    private static final long CHUNK_SIZE = 6291456L;
     private static final long MAX_WORKERS_PER_JOB = 30;
     private static Random random = new Random();
     private Job job;
@@ -50,7 +53,7 @@ public class JobController {
         String user = jobInfoObj.getString("user");
         String datasetPath = "uploads/"+user+"/datasets/"+jobInfoObj.getString("dataset_file");
 
-        Job j = new Job(datasetPath, jobInfoObj.getString("executable_file"),forUser+"/"+jobNodeId);
+        Job j = new Job(datasetPath, jobInfoObj.getString("executable_file"),forUser+"/"+jobNodeId, Integer.valueOf(jobInfoObj.getString("reducers_num")));
         j.setJobCommands(jobInfoObj.getString("map_method"), jobInfoObj.getString("reduce_method"));
 
         zController.updateJobStatus(j.getJobZnode(), "planning");
@@ -158,11 +161,12 @@ public class JobController {
                 Thread.sleep(500);
             }
 
+            j.deqeueAll();
             System.out.println("Proceeding to Mapping...");
 
             //Find out what chunks where created at the chunk stage
             String jobResultDir = "/app/uploads/results/"+j.getJobZnode();
-            List<String> chunkFiles = scanDirectory(jobResultDir);
+            List<String> chunkFiles = scanDirectory(jobResultDir,"chunked_");
 
             int index = 0;
             zController.updateJobStatus(j.getJobZnode(), "mapping");
@@ -198,14 +202,13 @@ public class JobController {
             }
 
             System.out.println(j.getTasks());
-            zController.updateJobStatus(j.getJobZnode(), "chunking");
+            zController.updateJobStatus(j.getJobZnode(), "mapping");
             while(true){
                 int chunkTasksCompleted = 0;
                 System.out.println(zController.getTasksOfJob("/jobs/"+j.getJobZnode()));
                 for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
-                    System.out.println(zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s));
                     JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
-                    if(data.getString("command").equals("chunk") && data.getString("status").equals("COMPLETED")) {
+                    if(data.getString("command").equals("map") && data.getString("status").equals("COMPLETED")) {
                         chunkTasksCompleted++;
                     }
                 }
@@ -213,7 +216,96 @@ public class JobController {
                 if(chunkTasksCompleted==j.getTasks().size()){
                     break;
                 }
-                Thread.sleep(500);
+                Thread.sleep(5000);
+            }
+
+
+
+            System.out.println("Proceeding to Shuffling...");
+
+            //Find out what chunks where created at the chunk stage
+            jobResultDir = "/app/uploads/results/"+j.getJobZnode();
+            List<String> mapfiles = scanDirectory(jobResultDir,"map_");
+            // Convert the string list to a JSON array
+            JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
+            for (String str : mapfiles) {
+                jsonArrayBuilder.add(str);
+            }
+            JsonArray jsonArray = jsonArrayBuilder.build();
+            // Create the larger JSON object with the key "files"
+            JsonObject jsonObject = Json.createObjectBuilder()
+                    .add("files", jsonArray)
+                    .build();
+
+            String id = "t"+UUID.randomUUID().toString().replace("-","");
+            String tZnodePath = j.getJobZnode() + "/tasks/" + id;
+            ShuffleTask st = new ShuffleTask(id,"shuffle","/jobs/"+tZnodePath,  TaskType.SHUFFLE, jobResultDir, j.getNumberOfReducers(), Jsonizer.jsonObjectToString(jsonObject));
+            zController.insertTaskToZK(st);
+            System.out.println(Jsonizer.jsonObjectToString(jsonObject));
+            while (true) {
+                String worker = reserveWorker();
+                if(worker==null || worker.equals("null")){
+                    continue;
+                }
+                System.out.println("Trying to assign task: "+ st.getZnodePath()+" to reserved worker: "+worker);
+                if(assignTask(st,worker)){
+                    st.setOnWorker(worker);
+                    zController.updateWorkerOfTask(st.getZnodePath(), worker);
+                    j.enqeueTask(st);
+                    break;
+                }
+                Thread.sleep(10);
+                System.out.println("Failed to assign, trying again...");
+            }
+
+            zController.updateJobStatus(j.getJobZnode(), "shuffling");
+            System.out.println(j.getTasks());
+            while(true){
+                int shuffleTasksCompleted = 0;
+                for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
+                    JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
+                    if(data.getString("command").equals("shuffle") && data.getString("status").equals("COMPLETED")) {
+                        shuffleTasksCompleted++;
+                    }
+                }
+                //If all chunk tasks completed then stop waiting and proceed to mapping
+                if(shuffleTasksCompleted==j.getNumberOfReducers()){
+                    break;
+                }
+                Thread.sleep(5000);
+            }
+
+
+            System.out.println("Proceeding to Reducing...");
+            //Find out what chunks where created at the chunk stage
+            List<String> reduceFiles = scanDirectory(jobResultDir,"reduce_");
+            for(String s: reduceFiles){
+                s = "/app/uploads/results/" + j.getJobZnode() + "/"+s;
+                //Proceed to form MapTasks for each of the chunks
+                id = "t"+UUID.randomUUID().toString().replace("-","");
+                tZnodePath = j.getJobZnode() + "/tasks/" + id;
+                MapTask t = new MapTask(id, "/jobs/"+tZnodePath, "map", TaskType.MAP, index, "java -cp /app/uploads/"+user+"/executables/"+j.getExecutableJar()+" "+j.getMapCommand()+" "+s+" > "+jobResultDir+"/map_"+index+".intermediate");
+                index++;
+                System.out.println("Created task with exec cmd: "+t.getFunctionName());
+                zController.insertTaskToZK(t);
+                System.out.println(t.getZnodePath());
+
+
+                while (true) {
+                    String worker = reserveWorker();
+                    if(worker==null || worker.equals("null")){
+                        continue;
+                    }
+                    System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
+                    if(assignTask(t,worker)){
+                        t.setOnWorker(worker);
+                        zController.updateWorkerOfTask(t.getZnodePath(), worker);
+                        j.enqeueTask(t);
+                        break;
+                    }
+                    Thread.sleep(10);
+                    System.out.println("Failed to assign, trying again...");
+                }
             }
         }
         else {
@@ -224,12 +316,12 @@ public class JobController {
         }
     }
 
-    public static List<String> scanDirectory(String directoryPath) {
+    public static List<String> scanDirectory(String directoryPath, String prefix) {
         List<String> fileList = new ArrayList<>();
 
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(directoryPath))) {
             for (Path path : directoryStream) {
-                if (Files.isRegularFile(path) && path.getFileName().toString().startsWith("chunked_")) {
+                if (Files.isRegularFile(path) && path.getFileName().toString().startsWith(prefix)) {
                     fileList.add(path.getFileName().toString());
                 }
             }

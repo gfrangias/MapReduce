@@ -8,11 +8,13 @@ public class Job {
     private String executableJar;
     private String jobZnode;
     private String globalInputPath;
+    private int numberOfReducers;
     private LinkedList<Task> tasks;
 
-    public Job(String input, String jar, String znode){
+    public Job(String input, String jar, String znode, int nor){
         this.tasks = new LinkedList<Task>();
         this.executableJar = jar;
+        this.numberOfReducers = nor;
         this.globalInputPath = input;
         this.jobZnode = znode;
     }
@@ -38,7 +40,9 @@ public class Job {
         return mapCommand;
     }
 
-
+    public int getNumberOfReducers() {
+        return numberOfReducers;
+    }
     public void enqeueTask(Task t){
         tasks.push(t);
     }

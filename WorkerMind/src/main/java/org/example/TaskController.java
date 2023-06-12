@@ -2,6 +2,7 @@ package org.example;
 
 import model.*;
 
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import java.io.BufferedReader;
 import java.io.File;
@@ -71,26 +72,73 @@ public class TaskController {
             zController.makeMeIdle(workerName);
 
 
-        }else if(taskType.equals("map")){
+        } else if(taskType.equals("map")){
+
             System.out.println("Accepted Map Task");
             int index = tData.getJsonNumber("index").intValue();
             MapTask t = new MapTask(tid,tData.getString("onworker"), tid, tData.getString("command"), TaskType.MAP, index, tData.getString("function"));
             System.out.println(t.toString());
+
+            spawnProcess(tData.getString("function"), tid);
+
+            zController.makeMeIdle(workerName);
+
+        } else if(taskType.equals("shuffle")){
+
+            System.out.println("Accepted Shuffle Task");
+            int numOfReducers = tData.getJsonNumber("numOfReducers").intValue();
+            String outputPath = tData.getString("outputPath");
+            // Get the "files" field as a JSON array
+            JsonArray filesArray = tData.getJsonArray("files");
+
+            // Convert the JSON array to a string array
+            String[] files = new String[filesArray.size()];
+            for (int i = 0; i < filesArray.size(); i++) {
+                files[i] = filesArray.getString(i);
+            }
+
+            ShuffleTask t = new ShuffleTask(tid, tData.getString("onworker"), tData.getString("command"), tid, TaskType.SHUFFLE, tData.getString("outputPath"), tData.getInt("numOfReducers"), files);
             try{
-                spawnProcess(tData.getString("function"));
+                Shuffler.shuffle(t.getJsonFileArray(),t.getNumOfReducers(),t.getOutputPath());
                 zController.updateTaskStatus(tid, TaskStatus.COMPLETED);
-            } catch (Exception e){
+            }catch(Exception e){
                 zController.updateTaskStatus(tid, TaskStatus.FAILED);
             }
             zController.makeMeIdle(workerName);
-        }  else{
+
+        } else if(taskType.equals("reduce")){
+            System.out.println("Accepted Reduce Task");
+
+
+        } else if(taskType.equals("merge")){
+            System.out.println("Accepted Merge Task");
+
+
+        } else{
             System.out.println("Task invalid. Failure");
             zController.updateTaskStatus(tid, TaskStatus.FAILED);
         }
     }
 
-    public void spawnProcess(String cmd) throws IOException, InterruptedException {
+    public void spawnProcess(String cmd, String tid) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", "-c", cmd);
         Process process = processBuilder.start();
+
+        // Create a separate thread to wait for the process to complete
+        Thread waitThread = new Thread(() -> {
+            try {
+                int exitCode = process.waitFor();
+                if (exitCode == 0) {
+                    zController.updateTaskStatus(tid, TaskStatus.COMPLETED);
+                } else {
+                    zController.updateTaskStatus(tid, TaskStatus.FAILED);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // Start the wait thread
+        waitThread.start();
     }
 }

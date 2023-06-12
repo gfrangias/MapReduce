@@ -36,6 +36,7 @@ function createJob($username, $zk, $postFields) {
             'status' => 'queued',
             'map_method' => $postFields['mapMethod'],
             'reduce_method' => $postFields['reduceMethod'],
+            'reducers_num' => $postFields['reducersNum'],
             'stage' => "init"
         ]);                                                                                                                                                                                                                                                                                                                                                                                                 
     
