@@ -1,10 +1,12 @@
 <?php
 include 'functions.php';
-$stages = array('init', 'planning', 'chunking', 'mapping', 'reducing', 'final');
+$stages = array('init', 'chunking', 'mapping', 'shuffling', 'reducing', 'merging', 'completed');
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+verifyToken();
+
 
 // Get the username from the session
 $username = $_SESSION['username'];
@@ -41,7 +43,6 @@ $zk = new Zookeeper($randomAddress);
             return null;
         }
     }
-
 ?>
 
 
@@ -178,6 +179,9 @@ $zk = new Zookeeper($randomAddress);
 
         .tooltip-inner {
             border-radius: 5px;
+            max-width: 200px; /* If you want to change the width */
+            font-size: 15px; /* Change this to increase/decrease the font size */
+            padding: 10px; /* Change this to increase/decrease the padding */
         }
 </style>
 <body>
@@ -185,6 +189,7 @@ $zk = new Zookeeper($randomAddress);
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand">Job Details<?php if(isset($_GET['id'])){echo ' for <strong> '. $_GET['id'].'</strong>';}?> </a>
+        <div hidden disabled id = "jid"><?echo $_GET['id']?></div>
     </nav>
 
     <!-- Container -->
@@ -202,30 +207,36 @@ $zk = new Zookeeper($randomAddress);
                     <?php
                     $jobId = $_GET['id'];
                     $jobInfo = getJobInfo($username, $jobId, $zk); // Function to retrieve job info
-
                     // Display job details
-                     echo "<p>Job Title: <strong> " . $jobInfo['title'] . "</strong></p>";
-                     if (strpos($jobInfo['status'], 'running') !== false) {
-                        echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
+                    echo "<p>Job Title: <strong> " . $jobInfo['title'] . "</strong></p>";
+                    if (strpos($jobInfo['status'], 'running') !== false) {
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
                     } elseif (strpos($jobInfo['status'], 'queued') !== false){
-                        echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='yellow-bullet'></span></p>";
-                    } elseif (strpos($jobInfo['status'], 'exited') !== false){
-                        echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='green-bullet'></span></p>";
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='yellow-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'completed') !== false){
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='green-bullet'></span></p>";
                     } elseif (strpos($jobInfo['status'], 'failed') !== false){
-                        echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='red-bullet'></span></p>";
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='red-bullet'></span></p>";
                     } elseif (strpos($jobInfo['status'], 'planning') !== false){
-                            echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='pink-bullet'></span></p>";
-                    } elseif (strpos($jobInfo['status'], 'resourcing') !== false){
-                                echo "<p>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='orange-bullet'></span></p>";
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='pink-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'mapping') !== false){
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'reducing') !== false){
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'shuffling') !== false){
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'chunking') !== false){
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
+                    } elseif (strpos($jobInfo['status'], 'merging') !== false){
+                        echo "<p id='job-status'>Status: " . "<strong>". $jobInfo['status'] ."</strong> <span class='blue-bullet'></span></p>";
                     }else {
-                        echo "<p>Status: " . $jobInfo['status'] . "</p>";
+                        echo "<p id='job-status'>Status: " . $jobInfo['status'] . "</p>";
                     }
                      echo "<p>Creation Date: <strong> " . $jobInfo['creation_date'] . "</strong></p>";
                      echo "<p>Executable: <strong> " . $jobInfo['executable_file'] . "</strong></p>";
                      echo "<p>Dataset: <strong> " . $jobInfo['dataset_file'] . "</strong></p>";       
-                     echo "<p>Map Function: <strong> " . $jobInfo['map_method'] . "</strong></p>";  
-                     echo "<p>Reduce Function: <strong> " . $jobInfo['reduce_method'] . "</strong></p>";    
-                     echo "<p>Flow stage: <strong> " . $jobInfo['stage'] . "</strong></p>";     
+                     echo "<p>Map Class: <strong> " . $jobInfo['map_method'] . "</strong></p>";  
+                     echo "<p>Reduce Class: <strong> " . $jobInfo['reduce_method'] . "</strong></p>";    
                     ?>
                 </div>
             </div>
@@ -233,13 +244,12 @@ $zk = new Zookeeper($randomAddress);
             <!-- Right Container: Execution Info -->
             <div class="col-lg-8 rounded-container">
                 <div class="rounded-top p-2 text-white">
-                    <h5 class="mb-0">Execution Info</h5>
+                    <h5 class="mb-0">Execution Time Info</h5>
                 </div>
                 <div class="container-fluid h-100  flex-column">
                     <div class="row flex-grow-1 bg-light box">
-                        <div class="pt-5 col-md-6">
-                            Number of workers deployed: <strong>218</strong>
-                            Total Execution Time: <strong>324.1s</strong>
+                        <div class="pt-3 col-md-3">
+                        
                         </div>
                         <div class="pt-5 col-md-6 pb-4 d-flex flex-column">
                             <div id="chart" class="chart-container"></div>
@@ -252,7 +262,7 @@ $zk = new Zookeeper($randomAddress);
             <div class="timeline text-center">
                 <?php foreach($stages as $stage): ?>
                     <div class="stage" id="<?php echo str_replace(' ', '_', $stage); ?>" data-toggle="tooltip" data-placement="bottom" title="">
-                        <p class="my-auto"><?php echo substr($stage, 0, 1); ?></p>
+                        <p class="my-auto"><?php echo strtoupper(substr($stage, 0, 1)); ?></p>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -263,17 +273,21 @@ $zk = new Zookeeper($randomAddress);
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
         <script>
-        $(document).ready(function(){
+       $(document).ready(function(){
             function fetchStage() {
+                var jid = $('#jid').text();
                 $.ajax({
                     url: 'fetch_stage.php',
                     type: 'get',
+                    data: { 'jobpathid': jid }, 
                     dataType: 'json',
                     success: function(response) {
                         $('.stage').removeClass('current past');
                         $('#'+response.stage.replace(' ', '_')).addClass('current').prevAll().addClass('past');
-                        $.each(response.numOfWorkers, function(stage, num) {
-                            $('#'+stage.replace(' ', '_')).attr('data-original-title', stage + ': Num Of Workers ' + num);
+                        $.each(response.workers, function(stage, num) {
+                            var tooltipTitle = "<strong>" + stage.charAt(0).toUpperCase() + stage.slice(1) + "</strong>";
+                            var tooltipContent = 'Num Of Workers: ' + num;
+                            $('#'+stage.replace(' ', '_')).attr('data-original-title', tooltipTitle + '<br/>' + tooltipContent);
                         });
                     },
                     complete: function() {
@@ -282,7 +296,7 @@ $zk = new Zookeeper($randomAddress);
                 });
             }
             fetchStage();
-            $('[data-toggle="tooltip"]').tooltip();
+            $('[data-toggle="tooltip"]').tooltip({html: true});
         });
         </script>
         <!-- Bottom Container: Result -->
@@ -292,12 +306,7 @@ $zk = new Zookeeper($randomAddress);
                     <h5 class="mb-0">Result</h5>
                 </div>
                 <div class="rounded-container p-4 bg-light">
-                    <textarea class="form-control" rows="5" readonly><?php
-                        // Fetch result from jobs.php using GET
-                        // $result = retrieveResult($jobId); // Function to retrieve result
-
-                        // Display result
-                        // echo json_encode($result);
+                    <textarea class="form-control" rows="5" readonly id="result-box"><?php
                     ?></textarea>
                 </div>
             </div>
@@ -312,64 +321,135 @@ $zk = new Zookeeper($randomAddress);
     <script>
         var chart; // move this declaration outside of the function
         function updateChart() {
+            var jid = $('#jid').text();
             $.ajax({
-                url: 'time_data.php',
+                url: 'fetch_stage.php',
                 type: 'GET',
+                data: { 'jobpathid': jid },
                 dataType: 'json',
-                success: function (data) {                
-                if (data.length === 0) {
-                    $("#chart").empty();
-                    $("#message").text("No stats available yet.");
-                } else {
+                success: function(data) {
+                    if (data.length === 0) {
+                        $("#chart").empty();
+                        $("#message").text("No stats available yet.");
+                    } else {
+                        if (chart) {
+                            chart.destroy();
+                        }
+                        var totalTime = data.times.total;
+                        delete data.times.total; // Remove the "total" property from the data object
 
-                    if(chart){
-                        chart.destroy();
-                    }
-                    var chartOptions = {
-                        series: data,
-                        chart: {
-                            type: 'pie',
-                            width: '105%',
-                        },
-                        labels: ['Map Time', 'Reduce Time', 'Preprocessing Time','Postprocessing time'],
-                        colors: ['#007BFF', '#8f8f8f', '#343A40','#033894'], // blue, grey, dark grey
-                        dataLabels: {
-                            formatter: function(val, opts) {
-                                return opts.w.config.series[opts.seriesIndex] + " seconds";
-                            },
-                        },
-                        responsive: [{
-                            breakpoint: 500,
-                            options: {
-                                chart: {
-                                    width: 100
-                                },
-                                legend: {
-                                    position: 'bottom'
-                                }
+                        var labels = [];
+                        var series = [];
+                        for (var label in data.times) {
+                            if (data.times.hasOwnProperty(label) && data.times[label] !== null) {
+                                labels.push(label.charAt(0).toUpperCase() + label.slice(1));
+                                series.push(data.times[label]);
                             }
-                        }]
-                    };
+                        }
 
-                    chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
-                    chart.render();
-                    $("#message").empty();
-                }
-            },
+                        var chartOptions = {
+                            series: series,
+                            chart: {
+                                type: 'pie',
+                                width: '105%',
+                            },
+                            labels: labels,
+                            colors: ['#007BFF', '#8f8f8f', '#343A40', '#4d68b0', '#033894'],
+                            dataLabels: {
+                                formatter: function(val, opts) {
+                                    return opts.w.config.series[opts.seriesIndex] + " seconds";
+                                },
+                            },
+                            responsive: [{
+                                breakpoint: 500,
+                                options: {
+                                    chart: {
+                                        width: 100
+                                    },
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            }]
+                        };
+
+                        chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+                        chart.render();
+                        $("#message").empty();
+                    }
+                },
                 error: function (xhr, status, error) {
                     console.error(xhr); // Log the XHR object for debugging purposes
                     console.error(status); // Log the status for debugging purposes
                     console.error(error); // Log the error for debugging purposes
-                    
+
                     $("#chart").empty();
                     $("#message").text("Error occurred while retrieving data.");
                 }
             });
         }
 
+        function updateJobStatus() {
+            var jid = $('#jid').text();
+            $.ajax({
+                url: 'fetch_stage.php',
+                type: 'GET',
+                data: { 'jobpathid': jid },
+                dataType: 'json',
+                success: function(response) {
+                    var status = response.stage;
+                    var bulletClass = '';
+
+                    if (status.includes('queued')) {
+                        bulletClass = 'yellow-bullet';
+                    } else if (status.includes('completed')) {
+                        bulletClass = 'green-bullet';
+                         // Job is completed, clear both intervals
+                        clearInterval(jobStatusInterval);
+                        clearInterval(chartInterval);
+                         // Job is completed, fetch the job result
+                        $.ajax({
+                            url: 'fetch_jobresult.php',
+                            type: 'GET',
+                            data: { 'jid': jid },
+                            success: function(result) {
+                                $('#result-box').text(result);
+                            },
+                            error: function(xhr, status, error) {
+                                console.error(xhr); // Log the XHR object for debugging purposes
+                                console.error(status); // Log the status for debugging purposes
+                                console.error(error); // Log the error for debugging purposes
+                                $('#result-box').text("Error occurred while fetching job result.");
+                            }
+                        });
+                    } else if (status.includes('failed')) {
+                        bulletClass = 'red-bullet';
+                    } else {
+                        bulletClass = 'blue-bullet';
+                    }
+
+                    var statusHtml = '<p>Status: <strong>' + status + '</strong> <span class="' + bulletClass + '"></span></p>';
+                    $('#job-status').html(statusHtml);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr); // Log the XHR object for debugging purposes
+                    console.error(status); // Log the status for debugging purposes
+                    console.error(error); // Log the error for debugging purposes
+                    $('#job-status').text("Error occurred while retrieving job status.");
+                }
+            });
+        }
+
+        function fetchJobResult() {
+
+        }
+
         $(document).ready(function () {
             updateChart();
-            setInterval(updateChart, 8000);
+            updateJobStatus();
+            // Start the intervals and store the interval IDs
+            jobStatusInterval = setInterval(updateJobStatus, 5000);
+            chartInterval = setInterval(updateChart, 8000);
         });
     </script>
 
