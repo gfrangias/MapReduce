@@ -79,9 +79,8 @@ public class TaskController {
             MapTask t = new MapTask(tid,tData.getString("onworker"), tid, tData.getString("command"), TaskType.MAP, index, tData.getString("function"));
             System.out.println(t.toString());
 
-            spawnProcess(tData.getString("function"), tid);
+            spawnProcess(tData.getString("function"), tid, workerName);
 
-            zController.makeMeIdle(workerName);
 
         } else if(taskType.equals("shuffle")){
 
@@ -97,6 +96,10 @@ public class TaskController {
                 files[i] = filesArray.getString(i);
             }
 
+            for (String file : files) {
+                System.out.println(file);
+            }
+
             ShuffleTask t = new ShuffleTask(tid, tData.getString("onworker"), tData.getString("command"), tid, TaskType.SHUFFLE, tData.getString("outputPath"), tData.getInt("numOfReducers"), files);
             try{
                 Shuffler.shuffle(t.getJsonFileArray(),t.getNumOfReducers(),t.getOutputPath());
@@ -109,6 +112,14 @@ public class TaskController {
         } else if(taskType.equals("reduce")){
             System.out.println("Accepted Reduce Task");
 
+            int index = Integer.parseInt(tData.getString("index"));
+            String input = tData.getString("inputPath");
+            String output = tData.getString("outputPath");
+            String fcommand =  tData.getString("fcommand");
+            ReduceTask t = new ReduceTask(tid,tData.getString("onworker"), tid, tData.getString("command"), TaskType.REDUCE, input, output, index, fcommand);
+            System.out.println(t.toString());
+
+            spawnProcess(t.getFunctionCommand(), tid, workerName);
 
         } else if(taskType.equals("merge")){
             System.out.println("Accepted Merge Task");
@@ -120,7 +131,7 @@ public class TaskController {
         }
     }
 
-    public void spawnProcess(String cmd, String tid) throws IOException {
+    public void spawnProcess(String cmd, String tid, String workerName) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", "-c", cmd);
         Process process = processBuilder.start();
 
@@ -130,9 +141,11 @@ public class TaskController {
                 int exitCode = process.waitFor();
                 if (exitCode == 0) {
                     zController.updateTaskStatus(tid, TaskStatus.COMPLETED);
+
                 } else {
                     zController.updateTaskStatus(tid, TaskStatus.FAILED);
                 }
+                zController.makeMeIdle(workerName);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
