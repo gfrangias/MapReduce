@@ -274,6 +274,18 @@ public class ZNodeController implements Watcher {
     }
 
     /**
+     * Updates the znode of statistics for given stage
+     * @param jobZnode
+     * @stage the stage to update stats for
+     * @time total execution time for stage
+     * @workers total worker assignments needed
+     */
+    public void updateStatsOfStage(String jobZnode, String stage, double time, int workers) throws Exception {
+        String data = "{\n\"workers\":"+ workers +",\n \"time\":"+time+"\n}";
+        zk.setData("/jobs/"+jobZnode+"/statistics/"+stage, data.getBytes(), -1);
+    }
+
+    /**
      * Returns all children znodes of persistent znode specified.
      * @param znode the Znode of which the childrens are requested
      * @return a String with all childrens of the znode

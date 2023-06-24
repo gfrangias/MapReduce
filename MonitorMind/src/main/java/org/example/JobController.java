@@ -76,11 +76,19 @@ public class JobController {
          * So with 30 workers we can chunk a file of max N_min*30*64MB size using N_min chunks per worker.
          * If this limit is reached then the number of chunks per worker should be increased and the team will be consisted of exactly 30 workers.
          */
+
+        //Variables used for keeping track of statistics for each stage
+        long startTime;
+        long endTime;
+        double diffTime;
+        int tasksForStage;
         
         if (file.exists()) {
+            startTime = System.currentTimeMillis();
             fileSize = file.length();
             System.out.println(" > File size in bytes: " + fileSize);
             System.out.println(" > Calculating workers and chunks per worker needed for chunk size: 64 MB.");
+
 
             // Max number of workers
             numOfWorkers = (long) fileSize / ((long) CHUNK_SIZE * 10);
@@ -157,10 +165,20 @@ public class JobController {
                 }
                 Thread.sleep(500);
             }
+            endTime = System.currentTimeMillis();
 
+            //Calculate Chunking Time elapsed
+            diffTime = (endTime-startTime)/1000.0;
+            tasksForStage = (int) numOfWorkers;
+
+            //Update chunking stage time plus num of workers in ZK for current job
+            zController.updateStatsOfStage(j.getJobZnode(), "chunking", diffTime, tasksForStage);
             j.deqeueAll();
-            System.out.println("\nProceeding to Mapping...");
 
+
+
+            System.out.println("\nProceeding to Mapping...");
+            startTime = System.currentTimeMillis();
             //Find out what chunks where created at the chunk stage
             String jobResultDir = "/app/uploads/results/"+j.getJobZnode();
             List<String> chunkFiles = scanDirectory(jobResultDir,"chunked_");
@@ -213,7 +231,19 @@ public class JobController {
 
             deleteFilesWithPrefix(jobResultDir,"chunked_");
             j.deqeueAll();
+
+
+            endTime = System.currentTimeMillis();
+            //Calculate Mapping Time elapsed
+            diffTime = (endTime-startTime)/1000.0;
+            tasksForStage = (int) chunkFiles.size();
+            //Update mapping stage time plus num of workers in ZK for current job
+            zController.updateStatsOfStage(j.getJobZnode(), "mapping", diffTime, tasksForStage);
+
+
+
             System.out.println("\nProceeding to Shuffling...");
+            startTime = System.currentTimeMillis();
 
 
             List<String> mapfiles = scanDirectory(jobResultDir,"map_");
@@ -268,7 +298,19 @@ public class JobController {
 
             deleteFilesWithPrefix(jobResultDir,"map_");
             j.deqeueAll();
+            endTime = System.currentTimeMillis();
+            //Calculate Shuffling Time elapsed
+            diffTime = (endTime-startTime)/1000.0;
+            tasksForStage = 1;
+            //Update shuffling stage time plus num of workers in ZK for current job
+            zController.updateStatsOfStage(j.getJobZnode(), "shuffling", diffTime, tasksForStage);
+
+
+
+
+
             System.out.println("\nProceeding to Reducing...");
+            startTime = System.currentTimeMillis();
 
             //Find out what intermediate files where created at the shuffle stage
             List<String> reduceFiles = scanDirectory(jobResultDir,"reduce_");
@@ -320,7 +362,16 @@ public class JobController {
 
             deleteFilesWithPrefix(jobResultDir,"reduce_");
             j.deqeueAll();
+            endTime = System.currentTimeMillis();
+            //Calculate Reducing Time elapsed
+            diffTime = (endTime-startTime)/1000.0;
+            tasksForStage = j.getNumberOfReducers();
+            //Update reducing stage time plus num of workers in ZK for current job
+            zController.updateStatsOfStage(j.getJobZnode(), "reducing", diffTime, tasksForStage);
+
+
             System.out.println("\nComputational stages of job: "+j.getJobZnode()+" completed, proceeding to merging...");
+            startTime = System.currentTimeMillis();
 
 
             List<String> mergefiles = scanDirectory(jobResultDir,"result_");
@@ -374,6 +425,14 @@ public class JobController {
 
             zController.updateJobStatus(j.getJobZnode(), "completed");
             deleteFilesWithPrefix(jobResultDir,"result_");
+
+            endTime = System.currentTimeMillis();
+            //Calculate Mering Time elapsed
+            diffTime = (endTime-startTime)/1000.0;
+            tasksForStage = 1;
+            //Update Merging stage time plus num of workers in ZK for current job
+            zController.updateStatsOfStage(j.getJobZnode(), "merging", diffTime, tasksForStage);
+
             System.out.println("Job Completed");
         }
         else {
