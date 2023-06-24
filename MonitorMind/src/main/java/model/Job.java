@@ -39,7 +39,9 @@ public class Job {
     public String getMapCommand() {
         return mapCommand;
     }
-
+    public String getReduceCommand() {
+        return reduceCommand;
+    }
     public int getNumberOfReducers() {
         return numberOfReducers;
     }

@@ -6,14 +6,17 @@ public class ReduceTask extends Task {
     private String functionCommand;
     private int index;
 
-    public ReduceTask(String id, String cmd, String znodePath, TaskType type, String inFIn, String outP, int index, String functionCommand) {
-        super(id, cmd, znodePath, type);
+    public ReduceTask(String id, String worker, String znodePath, String cmd, TaskType type, String inFIn, String outP, int index, String functionCommand) {
+        super(id, worker, cmd, znodePath, type);
         this.intermediateFileInput = inFIn;
         this.outputPath = outP;
         this.index = index;
         this.functionCommand = functionCommand;
     }
 
+    public String getFunctionCommand(){
+        return this.functionCommand;
+    }
     @Override
     public String toString() {
         return "{\n"+

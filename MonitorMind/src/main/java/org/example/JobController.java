@@ -26,7 +26,7 @@ public class JobController {
     private DockerController dController;
 
     private String handlerMonitor;
-    private static final long CHUNK_SIZE = 6291456L;
+    private static final long CHUNK_SIZE = 1<<26L;
     private static final long MAX_WORKERS_PER_JOB = 30;
     private static Random random = new Random();
     private Job job;
@@ -142,13 +142,10 @@ public class JobController {
                 }
             }
 
-            System.out.println(j.getTasks());
             zController.updateJobStatus(j.getJobZnode(), "chunking");
             while(true){
                 int chunkTasksCompleted = 0;
-                System.out.println(zController.getTasksOfJob("/jobs/"+j.getJobZnode()));
                 for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
-                    System.out.println(zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s));
                     JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
                     if(data.getString("command").equals("chunk") && data.getString("status").equals("COMPLETED")) {
                         chunkTasksCompleted++;
@@ -162,27 +159,24 @@ public class JobController {
             }
 
             j.deqeueAll();
-            System.out.println("Proceeding to Mapping...");
+            System.out.println("\nProceeding to Mapping...");
 
             //Find out what chunks where created at the chunk stage
             String jobResultDir = "/app/uploads/results/"+j.getJobZnode();
             List<String> chunkFiles = scanDirectory(jobResultDir,"chunked_");
 
             int index = 0;
+
             zController.updateJobStatus(j.getJobZnode(), "mapping");
-
-
             for(String s: chunkFiles){
-                s = "/app/uploads/results/" + j.getJobZnode() + "/"+s;
+                s = jobResultDir + "/"+s;
                 //Proceed to form MapTasks for each of the chunks
                 String id = "t"+UUID.randomUUID().toString().replace("-","");
                 String tZnodePath = j.getJobZnode() + "/tasks/" + id;
-                MapTask t = new MapTask(id, "/jobs/"+tZnodePath, "map", TaskType.MAP, index, "java -cp /app/uploads/"+user+"/executables/"+j.getExecutableJar()+" "+j.getMapCommand()+" "+s+" > "+jobResultDir+"/map_"+index+".intermediate");
+                MapTask t = new MapTask(id, "/jobs/"+tZnodePath, "map", TaskType.MAP, index, "java -cp /app/uploads/"+user+"/executables/"+j.getExecutableJar()+" Control "+j.getMapCommand()+" "+s+" "+jobResultDir+"/map_"+index+".intermediate");
                 index++;
-                System.out.println("Created task with exec cmd: "+t.getFunctionName());
+                System.out.println("Created Map Task with exec cmd: "+t.getFunctionName());
                 zController.insertTaskToZK(t);
-                System.out.println(t.getZnodePath());
-
 
                 while (true) {
                     String worker = reserveWorker();
@@ -201,8 +195,6 @@ public class JobController {
                 }
             }
 
-            System.out.println(j.getTasks());
-            zController.updateJobStatus(j.getJobZnode(), "mapping");
             while(true){
                 int chunkTasksCompleted = 0;
                 System.out.println(zController.getTasksOfJob("/jobs/"+j.getJobZnode()));
@@ -219,17 +211,16 @@ public class JobController {
                 Thread.sleep(5000);
             }
 
+            deleteFilesWithPrefix(jobResultDir,"chunked_");
+            j.deqeueAll();
+            System.out.println("\nProceeding to Shuffling...");
 
 
-            System.out.println("Proceeding to Shuffling...");
-
-            //Find out what chunks where created at the chunk stage
-            jobResultDir = "/app/uploads/results/"+j.getJobZnode();
             List<String> mapfiles = scanDirectory(jobResultDir,"map_");
             // Convert the string list to a JSON array
             JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
             for (String str : mapfiles) {
-                jsonArrayBuilder.add(str);
+                jsonArrayBuilder.add(jobResultDir+"/"+str);
             }
             JsonArray jsonArray = jsonArrayBuilder.build();
             // Create the larger JSON object with the key "files"
@@ -241,7 +232,7 @@ public class JobController {
             String tZnodePath = j.getJobZnode() + "/tasks/" + id;
             ShuffleTask st = new ShuffleTask(id,"shuffle","/jobs/"+tZnodePath,  TaskType.SHUFFLE, jobResultDir, j.getNumberOfReducers(), Jsonizer.jsonObjectToString(jsonObject));
             zController.insertTaskToZK(st);
-            System.out.println(Jsonizer.jsonObjectToString(jsonObject));
+
             while (true) {
                 String worker = reserveWorker();
                 if(worker==null || worker.equals("null")){
@@ -259,7 +250,7 @@ public class JobController {
             }
 
             zController.updateJobStatus(j.getJobZnode(), "shuffling");
-            System.out.println(j.getTasks());
+
             while(true){
                 int shuffleTasksCompleted = 0;
                 for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
@@ -268,28 +259,31 @@ public class JobController {
                         shuffleTasksCompleted++;
                     }
                 }
-                //If all chunk tasks completed then stop waiting and proceed to mapping
-                if(shuffleTasksCompleted==j.getNumberOfReducers()){
+                //If the only shuffle task is completed then stop waiting and proceed to reducing
+                if(shuffleTasksCompleted==1){
                     break;
                 }
                 Thread.sleep(5000);
             }
 
+            deleteFilesWithPrefix(jobResultDir,"map_");
+            j.deqeueAll();
+            System.out.println("\nProceeding to Reducing...");
 
-            System.out.println("Proceeding to Reducing...");
-            //Find out what chunks where created at the chunk stage
+            //Find out what intermediate files where created at the shuffle stage
             List<String> reduceFiles = scanDirectory(jobResultDir,"reduce_");
+            //Reset index for distinct file name for the merge intermediate files
+            index = 0;
             for(String s: reduceFiles){
                 s = "/app/uploads/results/" + j.getJobZnode() + "/"+s;
                 //Proceed to form MapTasks for each of the chunks
                 id = "t"+UUID.randomUUID().toString().replace("-","");
                 tZnodePath = j.getJobZnode() + "/tasks/" + id;
-                MapTask t = new MapTask(id, "/jobs/"+tZnodePath, "map", TaskType.MAP, index, "java -cp /app/uploads/"+user+"/executables/"+j.getExecutableJar()+" "+j.getMapCommand()+" "+s+" > "+jobResultDir+"/map_"+index+".intermediate");
+                ReduceTask t = new ReduceTask(id, "reduce","/jobs/"+tZnodePath, TaskType.REDUCE, s, jobResultDir, index,"java -cp /app/uploads/"+user+"/executables/"+j.getExecutableJar()+" Control "+j.getReduceCommand()+" "+s+" "+jobResultDir+"/ "+index);
                 index++;
-                System.out.println("Created task with exec cmd: "+t.getFunctionName());
-                zController.insertTaskToZK(t);
-                System.out.println(t.getZnodePath());
 
+                System.out.println("Created Reduce Task for intermediate input file: "+s);
+                zController.insertTaskToZK(t);
 
                 while (true) {
                     String worker = reserveWorker();
@@ -307,6 +301,27 @@ public class JobController {
                     System.out.println("Failed to assign, trying again...");
                 }
             }
+            zController.updateJobStatus(j.getJobZnode(), "reducing");
+
+            while(true){
+                int reduceTasksCompleted = 0;
+                for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
+                    JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
+                    if(data.getString("command").equals("reduce") && data.getString("status").equals("COMPLETED")) {
+                        reduceTasksCompleted++;
+                    }
+                }
+                //If all reduce tasks are completed then we proceed to the next stage
+                if(reduceTasksCompleted==j.getNumberOfReducers()){
+                    break;
+                }
+                Thread.sleep(5000);
+            }
+
+            deleteFilesWithPrefix(jobResultDir,"reduce_");
+            j.deqeueAll();
+            System.out.println("\nComputational stages of job: "+j.getJobZnode()+" completed, proceeding to merging...");
+
         }
         else {
             System.out.println("Input file does not exist. Job Failed. Exiting...");
@@ -382,6 +397,20 @@ public class JobController {
                 return id;
             }else{
                 return null;
+            }
+        }
+    }
+
+
+    private void deleteFilesWithPrefix(String directory, String prefix) {
+        File dir = new File(directory);
+        File[] files = dir.listFiles((d, name) -> name.startsWith(prefix));
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    boolean isDeleted = file.delete();
+                }
             }
         }
     }
