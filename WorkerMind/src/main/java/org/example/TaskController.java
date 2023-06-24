@@ -110,6 +110,8 @@ public class TaskController {
             zController.makeMeIdle(workerName);
 
         } else if(taskType.equals("reduce")){
+
+
             System.out.println("Accepted Reduce Task");
 
             int index = Integer.parseInt(tData.getString("index"));
@@ -121,8 +123,34 @@ public class TaskController {
 
             spawnProcess(t.getFunctionCommand(), tid, workerName);
 
+
+
         } else if(taskType.equals("merge")){
+
+
             System.out.println("Accepted Merge Task");
+            String outputPath = tData.getString("outputPath");
+            // Get the "files" field as a JSON array
+            JsonArray filesArray = tData.getJsonArray("files");
+
+            // Convert the JSON array to a string array
+            String[] files = new String[filesArray.size()];
+            for (int i = 0; i < filesArray.size(); i++) {
+                files[i] = filesArray.getString(i);
+            }
+
+            for (String file : files) {
+                System.out.println(file);
+            }
+
+            MergeTask t = new MergeTask(tid, tData.getString("onworker"), tData.getString("command"), tid, TaskType.MERGE, tData.getString("outputPath"), files);
+            try{
+                Merger.merge(t.getOutputPath(), t.getJsonFileArray());
+                zController.updateTaskStatus(tid, TaskStatus.COMPLETED);
+            }catch(Exception e){
+                zController.updateTaskStatus(tid, TaskStatus.FAILED);
+            }
+            zController.makeMeIdle(workerName);
 
 
         } else{

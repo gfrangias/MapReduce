@@ -322,6 +322,59 @@ public class JobController {
             j.deqeueAll();
             System.out.println("\nComputational stages of job: "+j.getJobZnode()+" completed, proceeding to merging...");
 
+
+            List<String> mergefiles = scanDirectory(jobResultDir,"result_");
+            // Convert the string list to a JSON array
+            for (String str : mergefiles) {
+                jsonArrayBuilder.add(jobResultDir+"/"+str);
+            }
+            JsonArray mergeFilesArray = jsonArrayBuilder.build();
+            // Create the larger JSON object with the key "files"
+            JsonObject jsonMergeFiles = Json.createObjectBuilder()
+                    .add("files", mergeFilesArray)
+                    .build();
+
+            id = "t"+UUID.randomUUID().toString().replace("-","");
+            tZnodePath = j.getJobZnode() + "/tasks/" + id;
+            MergeTask mt = new MergeTask(id,"merge","/jobs/"+tZnodePath,  TaskType.MERGE, jobResultDir+"/", Jsonizer.jsonObjectToString(jsonMergeFiles));
+            zController.insertTaskToZK(mt);
+
+            while (true) {
+                String worker = reserveWorker();
+                if(worker==null || worker.equals("null")){
+                    continue;
+                }
+                System.out.println("Trying to assign task: "+ mt.getZnodePath()+" to reserved worker: "+worker);
+                if(assignTask(mt,worker)){
+                    mt.setOnWorker(worker);
+                    zController.updateWorkerOfTask(mt.getZnodePath(), worker);
+                    j.enqeueTask(mt);
+                    break;
+                }
+                Thread.sleep(10);
+                System.out.println("Failed to assign, trying again...");
+            }
+
+            zController.updateJobStatus(j.getJobZnode(), "merging");
+
+            while(true){
+                int mergeTasksCompleted = 0;
+                for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
+                    JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
+                    if(data.getString("command").equals("merge") && data.getString("status").equals("COMPLETED")) {
+                        mergeTasksCompleted++;
+                    }
+                }
+                //If all reduce tasks are completed then we proceed to the next stage
+                if(mergeTasksCompleted==1){
+                    break;
+                }
+                Thread.sleep(5000);
+            }
+
+            zController.updateJobStatus(j.getJobZnode(), "completed");
+            deleteFilesWithPrefix(jobResultDir,"result_");
+            System.out.println("Job Completed");
         }
         else {
             System.out.println("Input file does not exist. Job Failed. Exiting...");
