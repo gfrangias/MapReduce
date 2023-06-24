@@ -338,6 +338,14 @@ $jobs = getJobs($username, $zk);
                                 echo $job['status'] ." <span class='blue-bullet'></span>";
                             } elseif (strpos($job['status'], 'chunking') !== false) {
                                 echo $job['status'] ." <span class='blue-bullet'></span>";
+                            } elseif (strpos($job['status'], 'shuffling') !== false) {
+                                echo $job['status'] ." <span class='blue-bullet'></span>";
+                            } elseif (strpos($job['status'], 'mapping') !== false) {
+                                echo $job['status'] ." <span class='blue-bullet'></span>";
+                            } elseif (strpos($job['status'], 'reducing') !== false) {
+                                echo $job['status'] ." <span class='blue-bullet'></span>";
+                            } elseif (strpos($job['status'], 'merging') !== false) {
+                                echo $job['status'] ." <span class='blue-bullet'></span>";
                             } elseif (strpos($job['status'], 'queued') !== false){
                                 echo $job['status'] ." <span class='yellow-bullet'></span>";
                             } elseif (strpos($job['status'], 'completed') !== false){

@@ -43,17 +43,16 @@ function createJob($username, $zk, $postFields) {
         // Create the job znode in ZooKeeper
         $zk->create($jobPath . $jobId, $jobInfo,  $acl);
 
-        // Create the stage znode of the job in ZK
-        $zk->create($jobPath . $jobId. '/stage', 'init', $acl);
         // Create the tasks znode of the job in ZK
         $zk->create($jobPath . $jobId. '/tasks', null, $acl);
 
         // Create the statistics znode of the job in ZK
         $zk->create($jobPath . $jobId. '/statistics', null, $acl);
-        $zk->create($jobPath . $jobId. '/statistics/planstage',null, $acl);
-        $zk->create($jobPath . $jobId. '/statistics/chunkstage',null, $acl);
-        $zk->create($jobPath . $jobId. '/statistics/mapstage',null, $acl);
-        $zk->create($jobPath . $jobId. '/statistics/reducestage',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/chunking',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/shuffling',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/merging',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/mapping',null, $acl);
+        $zk->create($jobPath . $jobId. '/statistics/reducing',null, $acl);
 
         return $jobId;
 
@@ -269,13 +268,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="form-group row">
-      <label for="mapMethod" class="col-sm-4 col-form-label">Map Function:</label>
+      <label for="mapMethod" class="col-sm-4 col-form-label">Map Class:</label>
       <div class="col-sm-8">
         <input type="text" class="form-control" id="mapMethod" name="mapMethod" required>
       </div>
     </div>
     <div class="form-group row">
-      <label for="reduceMethod" class="col-sm-4 col-form-label">Reduce Function:</label>
+      <label for="reduceMethod" class="col-sm-4 col-form-label">Reduce Class:</label>
       <div class="col-sm-8">
         <input type="text" class="form-control" id="reduceMethod" name="reduceMethod" required>
       </div>
