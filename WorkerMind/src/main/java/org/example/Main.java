@@ -1,14 +1,8 @@
 package org.example;
 
 import io.javalin.Javalin;
-import io.javalin.http.servlet.Task;
-import org.apache.zookeeper.*;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.data.Stat;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.Random;
 import java.net.*;
 
@@ -77,9 +71,11 @@ public class Main {
             //Handle Task with id = id when receiving request to do so
             app.post("/api/task/assign", ctx -> {
                 if(zController.iAmReserved(containerName)){
-                    //Check if assignment is coming from the monitor that deployed me
+
+                    //Check if assignment is coming from the monitor that deployed me or reserved me.
                     String monitorName = ctx.queryParam("monitor");
                     String tid = ctx.queryParam("tid");
+
                     if(monitorName.equals(dedicatedToMonitor)){
                         if(zController.iAmWorking(containerName)){
                             ctx.status(503);
@@ -87,7 +83,19 @@ public class Main {
                         zController.makeMeWorking(containerName);
                         System.out.println("Will handle task with task znode path: "+tid+" for monitor: "+monitorName);
                         ctx.status(200);
-                        tController.handleTask(tid,containerName);
+                        /*
+                            The task of the user will be completed async to the acknowledgment that it will be handled
+                            by the worker the monitor assigned it to.
+                        */
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                tController.handleTask(tid,containerName);
+                                // Handle any logic if the function executes successfully
+                            } catch (Exception e) {
+                                // Handle exception
+                                e.printStackTrace();
+                            }
+                        });
                     }else{
                         ctx.status(503); //Not your worker
                     }
