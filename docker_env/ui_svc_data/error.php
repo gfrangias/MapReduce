@@ -1,7 +1,6 @@
 <?php
     session_start();
-    session_unset();
-    session_destroy();
+
 ?>
 
 
@@ -88,8 +87,12 @@
         <div class="form-floating">
             <div class="alert alert-danger mt-3"> <?php if(!isset($_GET['s'])){ 
                                                             echo "<strong>You need to sign in first in order to access this page! </strong> <br> Error: 0x0010";
+                                                            session_unset();
+                                                            session_destroy();
                                                         }else if ($_GET['s']==1){
                                                             echo "<strong> Your session expired! Keep in mind each session is active for 30 minutes </strong> <br> Error: 0x0011";
+                                                            session_unset();
+                                                            session_destroy();
                                                         }else if ($_GET['s']==2){
                                                             echo "<strong> You are not authorized to visit this piece of resource! </strong>";
                                                         }
