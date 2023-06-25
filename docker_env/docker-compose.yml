@@ -110,11 +110,13 @@ services:
     container_name: proxyLB
     volumes:
       - ./haproxy_data/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+      - ./haproxy_data/ssl.pem:/usr/local/etc/haproxy/ssl.pem
     networks:
       map_reduce_network:
         ipv4_address: 172.16.0.254
     ports:
       - 80:80
+      - 443:443
 
   redis:
     image: redis:latest
