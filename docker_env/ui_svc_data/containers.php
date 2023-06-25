@@ -4,7 +4,7 @@
       session_start();
   }
   if ($_SESSION['username']!='admin'){
-    //header('Location: error.php?s=2');
+    header('Location: error.php?s=2');
   }
   verifyToken();
 ?>
