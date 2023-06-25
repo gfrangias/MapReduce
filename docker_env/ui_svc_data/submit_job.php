@@ -6,6 +6,8 @@ if (session_status() == PHP_SESSION_NONE) {
   session_start();
 }
 
+date_default_timezone_set('Europe/Athens');
+
  // Get the username (assuming it is available in the session or from some other source)
  $username = $_SESSION['username'];
 
