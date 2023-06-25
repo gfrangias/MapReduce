@@ -8,6 +8,11 @@ if (session_status() == PHP_SESSION_NONE) {
 verifyToken();
 
 
+if(!isset($_GET['id']) || empty($_GET['id'])){
+    header('Location: jobs.php');
+}
+
+
 // Get the username from the session
 $username = $_SESSION['username'];
 
@@ -23,7 +28,6 @@ $randomAddress = $zookeeperAddresses[array_rand($zookeeperAddresses)];
 
 // Connect to ZooKeeper
 $zk = new Zookeeper($randomAddress);
-
 
     // Function to retrieve jobs for the user from ZooKeeper
     function getJobInfo($username, $jobId, $zk)
@@ -287,7 +291,11 @@ $zk = new Zookeeper($randomAddress);
                         $.each(response.workers, function(stage, num) {
                             var tooltipTitle = "<strong>" + stage.charAt(0).toUpperCase() + stage.slice(1) + "</strong>";
                             var tooltipContent = 'Num Of Workers: ' + num;
+                            if(stage=='init' || stage=='completed'){
+                                tooltipContent = '';
+                            }
                             $('#'+stage.replace(' ', '_')).attr('data-original-title', tooltipTitle + '<br/>' + tooltipContent);
+
                         });
                     },
                     complete: function() {
