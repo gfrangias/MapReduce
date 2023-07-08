@@ -448,6 +448,14 @@ public class JobController {
         }
     }
 
+
+
+    public boolean handleWorkerFailure(String workerFailed){
+        System.out.println("Will handle worker + "+workerFailed + " crash in case any tasks were running on him");
+        return true;
+    }
+
+
     public static List<String> scanDirectory(String directoryPath, String prefix) {
         List<String> fileList = new ArrayList<>();
 

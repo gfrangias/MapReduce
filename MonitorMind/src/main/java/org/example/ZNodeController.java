@@ -15,8 +15,13 @@ public class ZNodeController implements Watcher {
     private String leadingMonitorIP;
     private String monitorName;
     private String electoralNodeName;
+
+    private JobController jController;
     public ZNodeController(ZooKeeper zk_arg){
         this.zk = zk_arg;
+    }
+    public void giveJobControllerAccess(JobController j){
+        this.jController = j;
     }
 
     @Override
@@ -29,11 +34,12 @@ public class ZNodeController implements Watcher {
                 // Should elect new leader, get into elections process
                 try {
                     electLeader();
-                } catch (Exception e) {
-                }
+                } catch (Exception e) {}
+
             } else if (deletedZNodePath.startsWith("/workers")) {
-                // Shit some worker failed, time to see what it was doing and reassign its job
-                //handleWorkerFailure(deletedZNodePath);
+                //Shit some worker failed, time to see what it was doing and reassign its job
+                System.out.println("Worker "+deletedZNodePath + " RIP...");
+                jController.handleWorkerFailure(deletedZNodePath);
             }
         }
     }
