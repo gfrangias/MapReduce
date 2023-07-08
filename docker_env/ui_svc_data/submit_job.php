@@ -50,6 +50,7 @@ function createJob($username, $zk, $postFields) {
 
         // Create the statistics znode of the job in ZK
         $zk->create($jobPath . $jobId. '/statistics', null, $acl);
+        $zk->create($jobPath . $jobId. '/assignments', null, $acl);
         $zk->create($jobPath . $jobId. '/statistics/chunking',null, $acl);
         $zk->create($jobPath . $jobId. '/statistics/shuffling',null, $acl);
         $zk->create($jobPath . $jobId. '/statistics/merging',null, $acl);

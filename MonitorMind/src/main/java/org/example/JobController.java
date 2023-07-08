@@ -141,7 +141,8 @@ public class JobController {
                     System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
                     if(assignTask(t,worker)){
                         t.setOnWorker(worker);
-                        zController.updateWorkerOfTask(t.getZnodePath(), worker);
+                        System.out.println("Will insert assignment for task: " + id + " at job:"+j.getJobZnode()+" on worker: "+worker);
+                        zController.insertAssignmentToZK(j.getJobZnode(), id, worker);
                         j.enqeueTask(t);
                         break;
                     }
@@ -204,7 +205,8 @@ public class JobController {
                     System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
                     if(assignTask(t,worker)){
                         t.setOnWorker(worker);
-                        zController.updateWorkerOfTask(t.getZnodePath(), worker);
+                        System.out.println("Will insert assignment for task: " + id + " at job:"+j.getJobZnode()+" on worker: "+worker);
+                        zController.insertAssignmentToZK(j.getJobZnode(), id, worker);
                         j.enqeueTask(t);
                         break;
                     }
@@ -271,7 +273,8 @@ public class JobController {
                 System.out.println("Trying to assign task: "+ st.getZnodePath()+" to reserved worker: "+worker);
                 if(assignTask(st,worker)){
                     st.setOnWorker(worker);
-                    zController.updateWorkerOfTask(st.getZnodePath(), worker);
+                    System.out.println("Will insert assignment for task: " + id + " at job:"+j.getJobZnode()+" on worker: "+worker);
+                    zController.insertAssignmentToZK(j.getJobZnode(), id, worker);
                     j.enqeueTask(st);
                     break;
                 }
@@ -335,7 +338,8 @@ public class JobController {
                     System.out.println("Trying to assign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
                     if(assignTask(t,worker)){
                         t.setOnWorker(worker);
-                        zController.updateWorkerOfTask(t.getZnodePath(), worker);
+                        System.out.println("Will insert assignment for task: " + id + " at job:"+j.getJobZnode()+" on worker: "+worker);
+                        zController.insertAssignmentToZK(j.getJobZnode(), id, worker);
                         j.enqeueTask(t);
                         break;
                     }
@@ -398,7 +402,8 @@ public class JobController {
                 System.out.println("Trying to assign task: "+ mt.getZnodePath()+" to reserved worker: "+worker);
                 if(assignTask(mt,worker)){
                     mt.setOnWorker(worker);
-                    zController.updateWorkerOfTask(mt.getZnodePath(), worker);
+                    System.out.println("Will insert assignment for task: " + id + " at job:"+j.getJobZnode()+" on worker: "+worker);
+                    zController.insertAssignmentToZK(j.getJobZnode(), id, worker);
                     j.enqeueTask(mt);
                     break;
                 }

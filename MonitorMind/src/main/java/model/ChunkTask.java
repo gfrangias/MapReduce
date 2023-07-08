@@ -29,10 +29,6 @@ public class ChunkTask extends Task{
         return chunkSize;
     }
 
-    public void assignToWorker(String workerName){
-        this.onWorker = workerName;
-    }
-
     @Override
     public String toString(){
         return "{\n"+

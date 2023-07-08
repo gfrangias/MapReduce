@@ -19,9 +19,6 @@ public class MapTask extends Task {
     public int getIndex() {
         return index;
     }
-    public void assignToWorker(String workerName){
-        this.onWorker = workerName;
-    }
 
     @Override
     public String toString(){

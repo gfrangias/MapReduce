@@ -261,6 +261,12 @@ public class ZNodeController implements Watcher {
         return childrenTasks;
     }
 
+    public void insertAssignmentToZK(String jobPath, String t, String worker) throws Exception{
+        String aPath = "/jobs/"+jobPath + "/assignments/" + t;
+        registerPersistentZnode(aPath, worker);
+        System.out.println("Updated assignment of task set to worker: "+ worker);
+    }
+
     public void updateWorkerOfTask(String znodePath, String worker) throws Exception {
         try {
             JsonObject currData = getZnodeData(znodePath);
