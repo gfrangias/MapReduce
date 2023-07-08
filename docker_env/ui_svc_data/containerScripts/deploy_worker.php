@@ -2,14 +2,15 @@
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $imageName = 'zooopsworker';
    
-    $networkConfig = [
-        "NetworkMode" => "map_reduce_net"
+    $hostConfig = [
+        "NetworkMode" => "map_reduce_net",
+        "Binds" => ['/home/vsam/zooops/MapReduce/docker_env/filedb/uploads:/app/uploads']    
     ];
     $containerName = 'w'.uniqid();
 
     $postData = json_encode([
         'Image' => $imageName,
-        'HostConfig' => $networkConfig,
+        'HostConfig' => $hostConfig,
         'Env' => ['CONTAINER_NAME='.$containerName,'DEDICATED_TO=none'],
     ]);
     $url = "http://172.17.0.1:2375/containers/create";

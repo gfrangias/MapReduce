@@ -10,7 +10,7 @@ function deployMonitor(){
    
     $hostConfig = [
         "NetworkMode" => "map_reduce_net",
-        "Binds" => ['/home/user/mp/MapReduce/docker_env/filedb/uploads:/app/uploads']    
+        "Binds" => ['/home/vsam/zooops/MapReduce/docker_env/filedb/uploads:/app/uploads']    
     ];
     $containerName = 'm'.uniqid();
     
