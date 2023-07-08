@@ -36,7 +36,7 @@ function updateUser($userId, $updatedUser) {
 
 
 
-if (isset($_POST['id']) && isset($_POST['username']) && isset($_POST['email'])) {
+if (isset($_POST['id']) && isset($_POST['firstName']) && isset($_POST['lastName']) && isset($_POST['email'])) {
     $userId = $_POST['id'];
     if(isUserAdmin($_POST['id'], $_SESSION['authToken'])){
         header('Location: keycloak_user_management.php?msg_fail=Account+of+admin+is+not+subject+to+changes!');
@@ -45,7 +45,6 @@ if (isset($_POST['id']) && isset($_POST['username']) && isset($_POST['email'])) 
 
     $updatedUser = array(
         'id' => $userId,
-        'username' => $_POST['username'],
         'email' => $_POST['email'],
         'firstName' => isset($_POST['firstName']) ? $_POST['firstName'] : '',
         'lastName' => isset($_POST['lastName']) ? $_POST['lastName'] : ''
