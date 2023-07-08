@@ -97,6 +97,11 @@ public class Main {
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
             JobController jController = new JobController(zController);
+
+            //Give the zController the right to access methods of the current jController
+            //in order to be able to invoke handleWorkerFailure().
+            zController.giveJobControllerAccess(jController);
+
             //JobController jController = new JobController();
 
             //Register self into Zookeeper as monitor or fathermonitor (decided upon container name)
@@ -120,13 +125,13 @@ public class Main {
                 ctx.status(200); // Set the HTTP status code
             });
 
-            //Watch node with id = id
+            //Watch monitor node with id = id
             app.post("/api/zk/watchme/{id}", ctx -> {
                 System.out.println("Will try to watch monitor znode with id:" + ctx.pathParam("id"));
 
                 zController.watchNode("/monitors/"+ctx.pathParam("id")); // Make this monitor to watch the client requested attention
 
-                System.out.println("I am successfully watching monitor znode with id:" + ctx.pathParam("id"));
+                System.out.println("I am successfully watching worker znode with id:" + ctx.pathParam("id"));
                 ctx.status(200); // Set the HTTP status code
             });
 
@@ -152,6 +157,16 @@ public class Main {
                 }else{
                     ctx.status(503); //Unavailable if already committed to job
                 }
+            });
+
+            //Watch monitor node with id = id
+            app.post("/api/zk/watchmeasworker/{id}", ctx -> {
+                System.out.println("Will try to watch worker znode with id:" + ctx.pathParam("id"));
+
+                zController.watchNode("/workers/"+ctx.pathParam("id")); // Make this monitor to watch the client requested attention
+
+                System.out.println("I am successfully watching monitor znode with id:" + ctx.pathParam("id"));
+                ctx.status(200); // Set the HTTP status code
             });
 
         } catch (Exception e) {
