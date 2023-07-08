@@ -18,7 +18,7 @@ public class DockerController {
         String imageName = "zooopsworker";
         JsonObject hostConfig = Json.createObjectBuilder()
                 .add("NetworkMode", "map_reduce_net")
-                .add("Binds", Json.createArrayBuilder().add("/home/vsam/MapReduce/docker_env/filedb/uploads:/app/uploads"))
+                .add("Binds", Json.createArrayBuilder().add("/home/vsam/zooops/MapReduce/docker_env/filedb/uploads:/app/uploads"))
                 .build();
 
         JsonObject postData = Json.createObjectBuilder()
