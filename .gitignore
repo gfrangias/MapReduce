@@ -1,3 +1,4 @@
 docker_env/mysql_data/
 docker_env/ui_svc_data/vendor/
 docker_env/filedb/
+docker_env/haproxy_data/ssl.pem
