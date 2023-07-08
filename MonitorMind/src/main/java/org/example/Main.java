@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.net.*;
+import java.util.concurrent.CompletableFuture;
 
 
 public class Main {
@@ -132,10 +133,22 @@ public class Main {
             //Handle Job with id = id when receiving request to do so
             app.post("/api/job/assign/{user}/{id}", ctx -> {
                 if(!zController.iAmOccupied(containerName)){
-                    System.out.println("Will handle job with id:"+ctx.pathParam("id") + " for user: "+ctx.pathParam("user"));
                     zController.makeMeOccupied(containerName);
-                    jController.handleJob(ctx.pathParam("id"), ctx.pathParam("user"), containerName);
+                    System.out.println("Will handle job with id:"+ctx.pathParam("id") + " for user: "+ctx.pathParam("user"));
                     ctx.status(200);
+                    /*
+                        The job of the user will be completed async to the acknowledgment that it will be handled
+                        by monitor the job was assigned to.
+                    */
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            jController.handleJob(ctx.pathParam("id"), ctx.pathParam("user"), containerName);
+                            // Handle any logic if the function executes successfully
+                        } catch (Exception e) {
+                            // Handle exception
+                            e.printStackTrace();
+                        }
+                    });
                 }else{
                     ctx.status(503); //Unavailable if already committed to job
                 }
