@@ -270,15 +270,6 @@ public class ZNodeController implements Watcher {
         }
     }
 
-    public void writeTaskResult(String znode, String result) throws Exception {
-        //Init the /workers node if not exists
-        Stat stat = this.zk.exists("/workers", false);
-        if (stat == null) {
-            System.out.println("Init /workers node because it didnt exist...");
-            registerPersistentZnode("/workers", "");
-        }
-    }
-
     /**
      * Return all alive workers in the system based on their registrations in ZK
      * This
