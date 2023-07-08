@@ -75,7 +75,6 @@ function createJob($username, $zk, $postFields) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   
   $currMonitors = $zk->getChildren('/monitors');
-  $numOfMonitorsCurrent = count($currMonitors);
   $newJobId = createJob($username, $zk, $_POST);
   $successfulAssignment = false;
 
@@ -127,7 +126,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   //we need to deploy new monitor
   if(!$successfulAssignment){
     $newContainerName = deployMonitor();
-    sleep(10);  
+    
+
+    //Check periodically if the monitor is up with a timeout of 15 seconds, after that the job submission
+    //is marked as failed
+    $timeout = 15000;
+    $starttime = microtime(true);
+    while(true) {
+        $currtime = microtime(true);
+        if($currtime - $starttime >= $timeout){
+          header("Location: submit_job.php?q=t");
+        }
+        if($zk->exists('/monitors/'.$newContainerName)){
+          break;
+        }
+        sleep(2);
+    }
     $newMonitorInfo = $zk->get("/monitors/".$newContainerName);    
     $newMonitorInfo = json_decode($newMonitorInfo,1);
       
@@ -142,24 +156,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Execute the cURL request
     $response = curl_exec($curl);
-    echo curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
     if(curl_getinfo($curl, CURLINFO_HTTP_CODE)==503){
       // The monitor was taken by another service during this request
       // I need to try to assign the job elsewhere
       // Close the cURL resource
       curl_close($curl);
-      echo 'Failure';
-      return;
     }
 
     // If we reach this point, the job is assigned to monitor
     $successfulAssignment = true;
-    if($successfulAssignment){
-      echo 'Success';
-    }
+ 
     // Close the cURL resource
     curl_close($curl);
+
+    if($successfulAssignment){
+      header("Location: submit_job.php?q=s");
+    }
   }
 }
 ?>
@@ -228,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="form-group row">
-      <label for="execFile" class="col-sm-4 col-form-label">Executable python file (.py)</label>
+      <label for="execFile" class="col-sm-4 col-form-label">Executable .jar file (.jar))</label>
       <div class="col-sm-8">
         <select class="form-control" id="execFile" name="execFile" required>
           <option value="" disabled selected>Select an executable file from your uploads</option>
@@ -299,6 +312,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         </div>
       </div>
+      <?php
+                if($_SERVER['REQUEST_METHOD']=='GET' && isset($_GET['q']) && $_GET['q']=='t'){
+                  echo    '<div class="container" id="failed-job">
+                                  <div class="row alert alert-danger">
+                                    <div  class="pl-3 col-xs-6 d-flex align-items-center">
+                                        <di>Job submission failed. Timeout exceeded and no available monitor was found</div>
+                                    </div>
+                                  
+                                  </div>
+                          </div>';
+                }
+                if($_SERVER['REQUEST_METHOD']=='GET' && isset($_GET['q']) && $_GET['q']=='s'){
+                  echo    '<div class="container" id="failed-job">
+                                  <div class="row alert alert-success">
+                                    <div  class="pl-3 col-xs-6 d-flex align-items-center">
+                                        <di>Job submission successful! Navigate to <a href="jobs.php">Job Manager</a> to see the execution flow of your job</div>
+                                    </div>
+                                  
+                                  </div>
+                          </div>';
+                }
+      ?>
       <div class="container" style="display:none" id="alert-job">
             <div class="row alert alert-secondary">
               <div class="col-xs-6">
@@ -307,6 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <div  class="pl-3 col-xs-6 d-flex align-items-center">
                   <di>Allow some time for the job to set up. Sit tight please</div>
               </div>
+             
             </div>
     </div>
 </div>
@@ -315,8 +351,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
     function startTimer() {
       var loadingDiv = document.getElementById('alert-job');
+      var failedDiv = document.getElementById('failed-job');
+
 
       loadingDiv.style.display = 'block'; // Show the loading div
+      failedDiv.style.display = 'none'; // Hide the failed div
 
       setTimeout(function() {
           loadingDiv.style.display = 'none'; // Hide the loading div after 6 seconds
