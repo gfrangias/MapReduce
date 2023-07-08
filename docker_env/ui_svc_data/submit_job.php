@@ -8,12 +8,12 @@ if (session_status() == PHP_SESSION_NONE) {
 
 date_default_timezone_set('Europe/Athens');
 
- // Get the username (assuming it is available in the session or from some other source)
- $username = $_SESSION['username'];
+// Get the username (assuming it is available in the session or from some other source)
+$username = $_SESSION['username'];
 
- // Specify the server directories for executables and datasets
- $executableDir = './uploads/'.$username.'/executables';
- $datasetDir = './uploads/'.$username.'/datasets';
+// Specify the server directories for executables and datasets
+$executableDir = './uploads/'.$username.'/executables';
+$datasetDir = './uploads/'.$username.'/datasets';
 
 
  //It creates the znode for the job in ZK
