@@ -13,12 +13,8 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.print.Doc;
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 public class JobController {
 
@@ -29,6 +25,8 @@ public class JobController {
     private static final long CHUNK_SIZE = 1<<26L;
     private static final long MAX_WORKERS_PER_JOB = 30;
     private static Random random = new Random();
+
+    private String jobZnode;
     private Job job;
 
     public JobController(ZNodeController zc){
@@ -55,6 +53,8 @@ public class JobController {
 
         Job j = new Job(datasetPath, jobInfoObj.getString("executable_file"),forUser+"/"+jobNodeId, Integer.valueOf(jobInfoObj.getString("reducers_num")));
         j.setJobCommands(jobInfoObj.getString("map_method"), jobInfoObj.getString("reduce_method"));
+        this.jobZnode = j.getJobZnode();
+
 
         zController.updateJobStatus(j.getJobZnode(), "planning");
 
@@ -217,7 +217,6 @@ public class JobController {
 
             while(true){
                 int chunkTasksCompleted = 0;
-                System.out.println(zController.getTasksOfJob("/jobs/"+j.getJobZnode()));
                 for(String s : zController.getTasksOfJob("/jobs/"+j.getJobZnode())){
                     JsonObject data = zController.getZnodeData("/jobs/"+j.getJobZnode() + "/tasks/" + s);
                     if(data.getString("command").equals("map") && data.getString("status").equals("COMPLETED")) {
@@ -450,8 +449,38 @@ public class JobController {
 
 
 
-    public boolean handleWorkerFailure(String workerFailed){
+    public boolean handleWorkerFailure(String workerFailed) throws Exception{
         System.out.println("Will handle worker + "+workerFailed + " crash in case any tasks were running on him");
+        //Here we handle the reassignment of task to a new worker
+        //Because we already stored the task in ZK before, we just need to invoke
+        //an assignment to a worker after we reserve him.
+
+        //Because this method runs in a separate thread which is run by the @process method called by ZK API
+        //This will give the task to a reserved worker and the other waiting for the job stage to complete will
+        //continue once this produces results
+
+        //We need to see which task of the current job the worker failed was handling during its failure
+        HashMap<String, String> nonCompletedTasksOfWorker = zController.getNonCompletedTasksOfFailedWorkerByJob(workerFailed, this.jobZnode);
+        System.out.println(nonCompletedTasksOfWorker);
+
+        //For every failed task of worker with @param workerFailed ID do an assignment again
+        for(String s:  nonCompletedTasksOfWorker.keySet()){
+            Task t = new Task(this.jobZnode + "/tasks/" + s);
+            while (true) {
+                String worker = reserveWorker();
+                if(worker==null || worker.equals("null")){
+                    continue;
+                }
+                System.out.println("Trying to reassign task: "+ t.getZnodePath()+" to reserved worker: "+worker);
+                if(assignTask(t,worker)){
+                    System.out.println("Will update assignment for task: " + t.getZnodePath() + " at job:"+this.jobZnode+" on worker: "+worker);
+                    zController.insertAssignmentToZK(this.jobZnode, s, worker);
+                    break;
+                }
+                Thread.sleep(10);
+                System.out.println("Failed to assign, trying again...");
+            }
+        }
         return true;
     }
 

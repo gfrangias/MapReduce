@@ -18,6 +18,10 @@ public class Task {
         this.taskType = type;
     }
 
+    public Task(String znodePath){
+        this.znodePath = znodePath;
+    }
+
     public void setTaskRunning(){ this.status = TaskStatus.RUNNING; }
 
     public void setTaskCompleted(){

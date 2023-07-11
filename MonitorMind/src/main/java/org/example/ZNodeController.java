@@ -4,10 +4,7 @@ import model.Task;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.data.Stat;
 import javax.json.*;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class ZNodeController implements Watcher {
 
@@ -26,6 +23,7 @@ public class ZNodeController implements Watcher {
 
     @Override
     public void process(WatchedEvent event) {
+        System.out.println("Got into process event");
         if (event.getType() == Event.EventType.NodeDeleted) {
             String deletedZNodePath = event.getPath();
             System.out.println("ZNode deleted: " + deletedZNodePath);
@@ -38,8 +36,13 @@ public class ZNodeController implements Watcher {
 
             } else if (deletedZNodePath.startsWith("/workers")) {
                 //Shit some worker failed, time to see what it was doing and reassign its job
-                System.out.println("Worker "+deletedZNodePath + " RIP...");
-                jController.handleWorkerFailure(deletedZNodePath);
+                System.out.println("Worker "+deletedZNodePath + "failed. RIP...");
+                try{
+                    jController.handleWorkerFailure(deletedZNodePath);
+                } catch(Exception e){
+                    //Handle failure during reassignment
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -90,6 +93,18 @@ public class ZNodeController implements Watcher {
             data = "{\"ipAddress\":\""+ myIP +"\", \"occupied\":false}";
             registerEphemeralZnode("/monitors/"+znodeName, data);
 
+            //No leader present case
+            if(zk.exists("/monitors/leader", false) == null){
+                //Check maybe if leader failed and I entered the system during the election process
+                HashMap<String, String> map = listChildrenData("/elections");
+                if(map.isEmpty()){
+                    //Then no candidates, I become leader!!!
+                    //Register the leader to its dedicated znode
+                    registerEphemeralZnode("/monitors/leader", znodeName);
+                    return;
+                }
+            }
+
             //Should create my node for possible elections in the future
             this.electoralNodeName = registerElectoralNode();
             System.out.println("I register my electoral znode in: "+this.electoralNodeName);
@@ -100,6 +115,7 @@ public class ZNodeController implements Watcher {
             //Ask the leader to watch me
             HttpClient.post(url,null);
             //And I will watch the leader
+
             watchNode("/monitors/leader");
         }
     }
@@ -151,6 +167,80 @@ public class ZNodeController implements Watcher {
             System.out.println("ZNode does not exist.");
         }
     }
+
+    /**
+     * Make this monitor a non watcher for a specified znode name
+     * @param znodePath
+     */
+    public void unwatchNode(String znodePath) throws Exception {
+        // Check if the znode exists
+        Stat stat = zk.exists(znodePath, false);
+
+        if (stat != null) {
+            // Stop watching the znode for changes
+            zk.getData(znodePath, false, null);
+        } else {
+            System.out.println("ZNode does not exist.");
+        }
+    }
+
+    /**
+     * Returns a NON-COMPLETED task of a worker for a job
+     * Used mainly when detecting worker failures
+     * @param workerID:  the id of the failed worker
+     * @param jobZnode: the znode path of the job
+     * @returns List of Strings with task IDs
+     */
+    public HashMap<String, String> getNonCompletedTasksOfFailedWorkerByJob(String workerID, String jobZnode) throws Exception {
+
+        //Get the assignment of tasks to workers
+        HashMap<String, String> tasksAndWorkers = listChildrenData(jobZnode+"/assignments");
+
+        //Remove any tasks assigned to other workers other than the one for which we are handling the failure now
+        removeNotHavingValue(tasksAndWorkers, workerID);
+
+        //Do not want to handle any completed tasks
+        //For every task remaining in the HashMap check if its completed. If it is, then throw it away
+        for(String s: tasksAndWorkers.keySet()){
+            JsonObject t = getTaskData(jobZnode+"/tasks/"+s);
+            //Throw away if task is marked completed
+            if(t.getString("status").equals("COMPLETED")){
+                tasksAndWorkers.remove(s);
+            }
+        }
+
+        return tasksAndWorkers;
+    }
+
+    /**
+     * Returns the information of a task of a specific job.
+     * @param znode the znode path of the task.
+     * @return a JsonObject object containing the information of the task
+     */
+    public JsonObject getTaskData(String znode) throws Exception {
+        String nodeInfo = new String(zk.getData(znode, null, null));
+        JsonObject jsonObj = Jsonizer.jsonStringToObject(nodeInfo);
+        return jsonObj;
+    }
+
+
+    /**
+     * Removees
+     * @param map
+     * @param value
+     * @param <K> Generic Type | any
+     * @param <V> Generic Type | any
+     */
+    public static <K, V> void removeNotHavingValue(HashMap<K, V> map, V value) {
+        Iterator<HashMap.Entry<K, V>> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            HashMap.Entry<K, V> entry = iterator.next();
+            if (!entry.getValue().equals(value)) {
+                iterator.remove();
+            }
+        }
+    }
+
 
     /**
      * Used for registering an electoral znode in zk for the current
@@ -269,7 +359,13 @@ public class ZNodeController implements Watcher {
 
     public void insertAssignmentToZK(String jobPath, String t, String worker) throws Exception{
         String aPath = "/jobs/"+jobPath + "/assignments/" + t;
-        registerPersistentZnode(aPath, worker);
+        //If assignment was previously done then an exception will occur if we try to overwrite it
+        //If exists update it, if not write it
+        if(zk.exists(aPath, false) == null){
+            registerPersistentZnode(aPath, worker);
+        }else{
+            zk.setData(aPath, worker.getBytes(), -1);
+        }
         System.out.println("Updated assignment of task set to worker: "+ worker);
     }
 
@@ -419,25 +515,22 @@ public class ZNodeController implements Watcher {
      */
     //public ArrayList<String>
 
-    public String listChildrenData(String znodeName) throws Exception {
+    public HashMap<String, String> listChildrenData(String znodeName) throws Exception {
         // Add a watch to the znode
         // Get the children (subnodes) of the znode
         List<String> children = zk.getChildren(znodeName, this);
 
         // Append the data of the znode and its subnodes to a list
-        List<String> dataStrings = new ArrayList<String>();
-
-        byte[] data = zk.getData(znodeName, this, null);
-        dataStrings.add(new String(data));
+        HashMap<String, String> childrenAndValues = new HashMap<String, String>();
 
         for (String child : children) {
             String childPath = znodeName + "/" + child;
             byte[] childData = zk.getData(childPath, this, null);
-            dataStrings.add(child + ":" + new String(childData));
+            childrenAndValues.put(child, new String(childData));
         }
 
         // Return the list as a string using toString
-        return dataStrings.toString();
+        return childrenAndValues;
     }
 
 }

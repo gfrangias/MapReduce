@@ -45,6 +45,12 @@ public class HttpClient {
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
 
+            // Set connection timeout
+            connection.setConnectTimeout(1500);
+
+            // Set read timeout
+            connection.setReadTimeout(4500);
+
             if (requestBody != null) {
                 OutputStream outputStream = connection.getOutputStream();
                 outputStream.write(requestBody.getBytes());

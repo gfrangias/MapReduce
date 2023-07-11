@@ -147,13 +147,17 @@ public class Main {
                     */
                     CompletableFuture.runAsync(() -> {
                         try {
+                            System.out.println("Current thread: " + Thread.currentThread().getName());
                             jController.handleJob(ctx.pathParam("id"), ctx.pathParam("user"), containerName);
+                            zController.makeMeAvailable(containerName);
                             // Handle any logic if the function executes successfully
                         } catch (Exception e) {
                             // Handle exception
                             e.printStackTrace();
                         }
                     });
+                    System.out.println("Current thread: " + Thread.currentThread().getName());
+
                 }else{
                     ctx.status(503); //Unavailable if already committed to job
                 }
@@ -162,12 +166,16 @@ public class Main {
             //Watch monitor node with id = id
             app.post("/api/zk/watchmeasworker/{id}", ctx -> {
                 System.out.println("Will try to watch worker znode with id:" + ctx.pathParam("id"));
-
-                zController.watchNode("/workers/"+ctx.pathParam("id")); // Make this monitor to watch the client requested attention
-
-                System.out.println("I am successfully watching monitor znode with id:" + ctx.pathParam("id"));
-                ctx.status(200); // Set the HTTP status code
+                try {
+                    zController.watchNode("/workers/" + ctx.pathParam("id")); // Make this monitor to watch the client requested attention
+                    System.out.println("I am successfully watching monitor znode with id:" + ctx.pathParam("id"));
+                    ctx.status(200); // Set the HTTP status code
+                }catch(Exception e){
+                    e.printStackTrace();
+                    ctx.status(503);
+                }
             });
+
 
         } catch (Exception e) {
             System.out.println(e.getMessage());

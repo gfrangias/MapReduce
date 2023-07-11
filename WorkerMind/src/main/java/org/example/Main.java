@@ -55,7 +55,7 @@ public class Main {
 
 
         try {
-            ZooKeeper zk = new ZooKeeper(zkAddress, 20000, null);
+            ZooKeeper zk = new ZooKeeper(zkAddress, 3000, null);
             zkAlive = true;
             ZNodeController zController = new ZNodeController(zk);
             TaskController tController = new TaskController(zController);
